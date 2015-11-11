@@ -190,8 +190,8 @@ void testMath() {
 
 	}
 
-	for (auto it = m.begin(); it!=m.end(); it++) {
-		cout << setw(w_) << (100 * it->second / float (total)) << "% error : " << it->first << endl;
+	for (auto p : m) {
+		cout << setw(w_) << (100 * p.second / float (total)) << "% error : " << p.first << endl;
 	}
 }
 
