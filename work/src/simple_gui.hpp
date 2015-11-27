@@ -1,5 +1,6 @@
+
 #include "imgui.h"
-#include "openGL.hpp"
+#include "opengl.hpp"
 
 namespace cgra {
 	namespace SimpleGUI {

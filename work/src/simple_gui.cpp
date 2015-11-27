@@ -1,4 +1,5 @@
-#include "simpleGUI.hpp"
+
+#include "simple_gui.hpp"
 
 #include <iostream>
 

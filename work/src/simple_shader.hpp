@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "openGL.hpp"
+#include "opengl.hpp"
 
 namespace cgra {
 

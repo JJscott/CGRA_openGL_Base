@@ -1,16 +1,3 @@
-//---------------------------------------------------------------------------
-//
-// Copyright (c) 2015 Taehyun Rhee, Joshua Scott, Ben Allen
-//
-// This software is provided 'as-is' for assignment of COMP308 in ECS,
-// Victoria University of Wellington, without any express or implied warranty. 
-// In no event will the authors be held liable for any damages arising from
-// the use of this software.
-//
-// The contents of this file may not be copied or duplicated in any form
-// without the prior permission of its owner.
-//
-//----------------------------------------------------------------------------
 
 #include <cmath>
 #include <cstdlib>
@@ -18,18 +5,25 @@
 #include <string>
 
 #include "cgra_math.hpp"
-#include "openGL.hpp"
-#include "simpleShader.hpp"
-#include "simpleGUI.hpp"
-#include "geometry.hpp"
+#include "opengl.hpp"
+#include "simple_gui.hpp"
+#include "simple_image.hpp"
+#include "simple_shader.hpp"
 
 using namespace std;
 using namespace cgra;
 
 GLFWwindow* window;
 
+
+void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+
+}
+
+
 void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 	SimpleGUI::mouseButtonCallback(win, button, action, mods);
+	if(!ImGui::IsMouseHoveringAnyWindow()) return;
 }
 
 
@@ -47,9 +41,11 @@ void charCallback(GLFWwindow *win, unsigned int c) {
 	SimpleGUI::charCallback(win, c);
 }
 
+
 void render() {
 
 }
+
 
 void renderGUI() {
 	
@@ -67,7 +63,7 @@ int main() {
 		abort(); // Unrecoverable error
 	}
 
-	// Get the version for later
+	// Get the version for GLFW for later
 	int glfwMajor, glfwMinor, glfwRevision;
 	glfwGetVersion(&glfwMajor, &glfwMinor, &glfwRevision);
 
@@ -100,6 +96,7 @@ int main() {
 
 	// Attach input callbacks to window
 	// Should not be done if we want imgui to control input
+	glfwSetCursorPosCallback(window, cursorPosCallback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetKeyCallback(window, keyCallback);
@@ -117,7 +114,6 @@ int main() {
 	}
 
 
-
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window)) {
 
@@ -125,19 +121,12 @@ int main() {
 		glClearColor(0.3f,0.3f,0.4f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// RENDER HERE !!!
-		//
+		// Main Render
+		render();
 
-
-
-		// Draw imgui
+		// GUI Render on top
 		SimpleGUI::newFrame();
-
-		ImGui::SetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
-		ImGui::Begin("Another Window");
-		ImGui::Text("Hello");
-		ImGui::End();
-		
+		renderGUI();
 		SimpleGUI::render();
 
 		// Swap front and back buffers

@@ -1,20 +1,8 @@
-//---------------------------------------------------------------------------
-//
-// Copyright (c) 2015 Taehyun Rhee, Joshua Scott, Ben Allen
-//
-// This software is provided 'as-is' for assignment of COMP308 in ECS,
-// Victoria University of Wellington, without any express or implied warranty. 
-// In no event will the authors be held liable for any damages arising from
-// the use of this software.
-//
-// The contents of this file may not be copied or duplicated in any form
-// without the prior permission of its owner.
-//
-//----------------------------------------------------------------------------
 
 #pragma once
 
 #include "cgra_math.hpp"
+#include "opengl.hpp"
 
 #include <stb_image.h>
 
@@ -28,6 +16,8 @@ namespace cgra {
 
 		image(const std::string &filepath) {
 			unsigned char *stbi_data = stbi_load(filepath.c_str(), &w, &h, &n, 0);
+			if (stbi_data == NULL)
+				throw std::runtime_error("failed to load image " + filepath);
 			data.assign(stbi_data, stbi_data+(w*h*n));
 			stbi_image_free(stbi_data);
 		}
@@ -39,19 +29,19 @@ namespace cgra {
 
 
 		// Use to get the appropriate GL format for data
-		GLenum format() const {
+		GLenum glFormat() const {
 			switch (n) {
 			case 1: return GL_R;
 			case 2: return GL_RG;
 			case 3: return GL_RGB;
 			case 4: return GL_RGBA;
-			default: return GL_RGB; // TODO list
+			default: return GL_RGBA; // TODO throw exception?
 			}
 		}
 
 		// Use to get a GL friendly pointer to the data
-		unsigned char * data() { return &data[0]; }
-		const unsigned char * data() const { return &data[0]; }
+		unsigned char * dataPointer() { return &data[0]; }
+		const unsigned char * dataPointer() const { return &data[0]; }
 
 		image subImage(int xoffset, int yoffset, int width, int height) {
 			image r(width, height, n);

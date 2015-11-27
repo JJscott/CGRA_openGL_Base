@@ -6,18 +6,17 @@
 # TODO list your header files (.hpp) here
 SET(headers
 	"cgra_math.hpp"
-	"imageLoader.hpp"
-	"simpleGUI.hpp"
-	"simpleShader.hpp"
-	"geometry.hpp"
+	"opengl.hpp"
+	"simple_gui.hpp"
+	"simple_image.hpp"
+	"simple_shader.hpp"
 )
 
 
 # TODO list your source files (.cpp) here
 SET(sources
 	"main.cpp"
-	"geometry.cpp"
-	"simpleGUI.cpp"
+	"simple_gui.cpp"
 )
 
 SET(test_sources
