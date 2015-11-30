@@ -39,73 +39,6 @@ auto vsqerr(const T &a, const T &b) {
 	return dot(c, c);
 }
 
-// template<typename T>
-// auto msqerr(const T &a, const T &b) {
-// 	T c = a - b;
-// 	return dot(c, c);
-// }
-
-
-
-// // Main test function
-// //
-// template<typename R>
-// void testZero(R (*f)(void), string p) {
-// 	int count = 0;
-// 	for (int i=0; i<total; i++)
-// 		if (f() > R(EPSILON)) count++;
-// 	cout << setw(w_) << (100 * count / float (total)) << "% error : " << p << endl;
-// }
-
-
-// template<typename T, typename F>
-// void testAllVectors(F f) {
-// 	f<vector2<T>, T>();
-// 	f<vector3<T>, T>();
-// 	f<vector4<T>, T>();
-// }
-
-// template<typename T, typename R>
-// void genericVectorTests() {
-// 	cout << "== Generic Vector Tests ==" << endl;
-
-// 	cout << "== Basic tests ==" << endl;
-
-// 	testZero<R>( []() -> R { T a = T::random();
-// 		return vsqerr(-(-a), a);
-// 	}, "negation (double negation)");
-
-// 	testZero<R>( []() -> R { T a = T::random(), b = T::random();
-// 		return vsqerr(a+b, b+a);
-// 	}, "addition (commutativity)");
-
-// 	testZero<R>( []() -> R { T a = T::random(), b = T::random(), c = T::random();
-// 		return vsqerr(a+(b+c), (a+b)+c);
-// 	}, "addition (associativity)");
-
-// 	testZero<R>( []() -> R { T a = T::random(); T zero = T();
-// 		return vsqerr(a+zero, a);
-// 	}, "addition (identity)");
-
-
-// 	testZero<R>( []() -> R { T a = T::random(), b = T::random();
-// 		return vsqerr(a-b, -(b-a));
-// 	}, "subtraction (anticommutativity)");
-
-// 	// testNotZero( []() -> R { T a = T::random(), b = T::random(), c = T::random();
-// 	// 	return vsqerr(a-(b-c), (a-b)-c);
-// 	// }, "subtraction (nonassociativity)");
-
-// 	testZero<R>( []() -> R { T a = T::random(); T zero = T();
-// 		return vsqerr(a-zero, a);
-// 	}, "subtraction (identity)");
-
-// 	testZero<R>( []() -> R { T a = T::random(), T zero = T();
-// 		return vsqerr(zero-a, -a);
-// 	}, "subtraction (negation)");
-
-// }
-
 
 template<typename T, typename U>
 void testMath() {
@@ -275,6 +208,15 @@ void testVectorCompile() {
 	r = faceforward(T::random(), T::random(), T::random());
 	r = reflect(T::random(), T::random());
 	r = refract(T::random(), T::random(), math::random<U>());
+
+	auto b = lessThan(T::random(), T::random());
+	lessThanEqual(T::random(), T::random());
+	greaterThan(T::random(), T::random());
+	greaterThanEqual(T::random(), T::random());
+	equal(T::random(), T::random());
+	notEqual(T::random(), T::random());
+	any(b);
+	all(b);
 
 }
 

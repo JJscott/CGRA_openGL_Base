@@ -701,6 +701,55 @@ namespace cgra {
 	}
 
 
+	// Vector Relational Functions
+	//
+
+	// component-wise compare of l<r
+	template <typename T1, typename T2>
+	inline bvec2 lessThan(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return bvec2(lhs.x < rhs.x, lhs.y < rhs.y);
+	}
+
+	// component-wise compare of l<=r
+	template <typename T1, typename T2>
+	inline bvec2 lessThanEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return bvec2(lhs.x <= rhs.x, lhs.y <= rhs.y);
+	}
+
+	// component-wise compare of l>r
+	template <typename T1, typename T2>
+	inline bvec2 greaterThan(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return bvec2(lhs.x < rhs.x, lhs.y < rhs.y);
+	}
+
+	// component-wise compare of l>=r
+	template <typename T1, typename T2>
+	inline bvec2 greaterThanEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return bvec2(lhs.x >= rhs.x, lhs.y >= rhs.y);
+	}
+
+	// component-wise compare of l==r
+	template <typename T1, typename T2>
+	inline bvec2 equal(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return bvec2(lhs.x == rhs.x, lhs.y == rhs.y);
+	}
+
+	// component-wise compare of l!=r
+	template <typename T1, typename T2>
+	inline bvec2 notEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return bvec2(lhs.x != rhs.x, lhs.y != rhs.y);
+	}
+
+	// true if ANY of v is true
+	inline bool any(const bvec2 &v) {
+		return v.x || v.y;
+	}
+
+	// true if ANY of v is true
+	inline bool all(const bvec2 &v) {
+		return v.x && v.y;
+	}
+
 
 
 
@@ -1270,6 +1319,54 @@ namespace cgra {
 	}
 
 
+	// Vector Relational Functions
+	//
+
+	// component-wise compare of l<r
+	template <typename T1, typename T2>
+	inline bvec3 lessThan(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return bvec3(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z);
+	}
+
+	// component-wise compare of l<=r
+	template <typename T1, typename T2>
+	inline bvec3 lessThanEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return bvec3(lhs.x <= rhs.x, lhs.y <= rhs.y, lhs.z <= rhs.z);
+	}
+
+	// component-wise compare of l>r
+	template <typename T1, typename T2>
+	inline bvec3 greaterThan(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return bvec3(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z);
+	}
+
+	// component-wise compare of l>=r
+	template <typename T1, typename T2>
+	inline bvec3 greaterThanEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return bvec3(lhs.x >= rhs.x, lhs.y >= rhs.y, lhs.z >= rhs.z);
+	}
+
+	// component-wise compare of l==r
+	template <typename T1, typename T2>
+	inline bvec3 equal(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return bvec3(lhs.x == rhs.x, lhs.y == rhs.y, lhs.z == rhs.z);
+	}
+
+	// component-wise compare of l!=r
+	template <typename T1, typename T2>
+	inline bvec3 notEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return bvec3(lhs.x != rhs.x, lhs.y != rhs.y, lhs.z != rhs.z);
+	}
+
+	// true if ANY of v is true
+	inline bool any(const bvec3 &v) {
+		return v.x || v.y || v.z;
+	}
+
+	// true if ANY of v is true
+	inline bool all(const bvec3 &v) {
+		return v.x && v.y && v.z;
+	}
 
 
 
@@ -1855,6 +1952,55 @@ namespace cgra {
 		return eta * i - (eta * dot(n, i) + std::sqrt(k)) * n;
 	}
 
+
+	// Vector Relational Functions
+	//
+
+	// component-wise compare of l<r
+	template <typename T1, typename T2>
+	inline bvec4 lessThan(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return bvec4(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z, lhs.w < rhs.w);
+	}
+
+	// component-wise compare of l<=r
+	template <typename T1, typename T2>
+	inline bvec4 lessThanEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return bvec4(lhs.x <= rhs.x, lhs.y <= rhs.y, lhs.z <= rhs.z, lhs.w <= rhs.w);
+	}
+
+	// component-wise compare of l>r
+	template <typename T1, typename T2>
+	inline bvec4 greaterThan(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return bvec4(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z, lhs.w < rhs.w);
+	}
+
+	// component-wise compare of l>=r
+	template <typename T1, typename T2>
+	inline bvec4 greaterThanEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return bvec4(lhs.x >= rhs.x, lhs.y >= rhs.y, lhs.z >= rhs.z, lhs.w >= rhs.w);
+	}
+
+	// component-wise compare of l==r
+	template <typename T1, typename T2>
+	inline bvec4 equal(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return bvec4(lhs.x == rhs.x, lhs.y == rhs.y, lhs.z == rhs.z, lhs.w == rhs.w);
+	}
+
+	// component-wise compare of l!=r
+	template <typename T1, typename T2>
+	inline bvec4 notEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return bvec4(lhs.x != rhs.x, lhs.y != rhs.y, lhs.z != rhs.z, lhs.w != rhs.w);
+	}
+
+	// true if ANY of v is true
+	inline bool any(const bvec4 &v) {
+		return v.x || v.y || v.z || v.w;
+	}
+
+	// true if ANY of v is true
+	inline bool all(const bvec4 &v) {
+		return v.x && v.y && v.z && v.w;
+	}
 
 
 

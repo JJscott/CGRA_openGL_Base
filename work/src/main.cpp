@@ -23,22 +23,29 @@ void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 	SimpleGUI::mouseButtonCallback(win, button, action, mods);
-	if(!ImGui::IsMouseHoveringAnyWindow()) return;
+	if(ImGui::IsMouseHoveringAnyWindow()) return; // block input with gui 
+
 }
 
 
 void scrollCallback(GLFWwindow *win, double xoffset, double yoffset) {
 	SimpleGUI::scrollCallback(win, xoffset, yoffset);
+	if(ImGui::IsMouseHoveringAnyWindow()) return; // block input with gui
+
 }
 
 
 void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
 	SimpleGUI::keyCallback(win, key, scancode, action, mods);
+	if(ImGui::IsAnyItemActive()) return; // block input with gui
+
 }
 
 
 void charCallback(GLFWwindow *win, unsigned int c) {
 	SimpleGUI::charCallback(win, c);
+	if(ImGui::IsAnyItemActive()) return; // block input with gui
+
 }
 
 
@@ -48,7 +55,9 @@ void render() {
 
 
 void renderGUI() {
-	
+	ImGui::Begin("Debug");
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::End();
 }
 
 
@@ -116,6 +125,11 @@ int main() {
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window)) {
+
+		// Make sure we draw to the WHOLE window
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		glViewport(0, 0, width, height);
 
 		// Grey/Blueish background
 		glClearColor(0.3f,0.3f,0.4f,1.0f);
