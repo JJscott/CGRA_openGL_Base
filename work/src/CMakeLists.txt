@@ -10,6 +10,7 @@ SET(headers
 	"simple_gui.hpp"
 	"simple_image.hpp"
 	"simple_shader.hpp"
+	"simple_vao.hpp"
 )
 
 
@@ -17,6 +18,7 @@ SET(headers
 SET(sources
 	"main.cpp"
 	"simple_gui.cpp"
+	"simple_vao.cpp"
 )
 
 SET(test_sources

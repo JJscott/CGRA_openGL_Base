@@ -785,7 +785,7 @@ namespace cgra {
 		vector3(const vector2<U> &v, T _z) : x(v.x), y(v.y), z(_z) {}
 
 		template <typename U>
-		vector3(T _x, const vector2<T> &v) : x(_x), y(v.x), z(v.y) {}
+		vector3(T _x, const vector2<U> &v) : x(_x), y(v.x), z(v.y) {}
 
 		// vector2 down-cast consctructor
 		explicit operator vector2<T>() const {return vector2<T>(x, y);}
@@ -2828,6 +2828,111 @@ namespace cgra {
 		}
 
 		static matrix4 identity() {return matrix4(1);}
+
+		template <typename U1, typename U2, typename U3>
+		static matrix4 lookAt(const vector3<U1> &eye,  const vector3<U2> &lookAt, const vector3<U3> &up) {
+			vector3<T> vz = normalize(eye-lookAt);
+			vector3<T> vx = normalize(cross(up, vz));
+			vector3<T> vy = normalize(cross(vz, vx));
+			matrix4 m = matrix4(
+				vector4<T>(vx, 0),
+				vector4<T>(vy, 0),
+				vector4<T>(vz, 0),
+				vector4<T>(eye, 1));
+			return inverse(m);
+		}
+
+		static matrix4 lookAt(T ex, T ey, T ez, T lx, T ly, T lz, T ux, T uy, T uz) {
+			return matrix4::lookAt(vector3<T>(ex, ey, ez), vector3<T>(lx, ly, lz), vector3<T>(ux, uy, uz));
+		}
+
+		// fovy in radians, aspect is w/h
+		static matrix4 perspectiveProjection(T fovy, T aspect, T zNear, T zFar) {
+			T f = T(1) / (fovy / T(2));
+
+			matrix4 m;
+			m[0][0] = f / aspect;
+			m[1][1] = f;
+			m[2][2] = (zFar + zNear) / (zNear - zFar);
+			m[3][2] = (2 * zFar * zNear) / (zNear - zFar);
+			m[2][3] = -1;
+			return m;
+		}
+
+		static matrix4 orthographicProjection(T left, T right, T bottom, T top, T nearVal, T farVal) {
+			matrix4 m;
+			m[0][0] = T(2) / (right - left);
+			m[3][0] = (right + left) / (right - left);
+			m[1][1] = T(2) / (top - bottom);
+			m[3][1] = (top + bottom) / (top - bottom);
+			m[2][2] = -T(2) / (farVal - nearVal);
+			m[3][2] = (farVal + nearVal) / (farVal - nearVal);
+			m[3][3] = T(1);
+			return m;
+		}
+
+		static matrix4 shear(int t_dim, int s_dim, T f) {
+			matrix4 m;
+			m[t_dim][s_dim] = f;
+			return m;
+		}
+
+		static matrix4 translate(T dx, T dy, T dz) {
+			matrix4 m(1);
+			m[3][0] = dx;
+			m[3][1] = dy;
+			m[3][2] = dz;
+			return m;
+		}
+
+		template <typename U>
+		static matrix4 translate(const vector3<U> & d) {
+			return matrix4::translate(d.x, d.y, d.z);
+		}
+
+		static matrix4 scale(T fx, T fy, T fz) {
+			matrix4 m(1);
+			m[0][0] = fx;
+			m[1][1] = fy;
+			m[2][2] = fz;
+			return m;
+		}
+		
+		template <typename U>
+		static matrix4 scale(const vector3<U> & f) {
+			return matrix4::scale(f.x(), f.y(), f.z());
+		}
+		
+		static matrix4 scale(T f) {
+			return matrix4::scale(f, f, f);
+		}
+
+		static matrix4 rotateX(T angle) {
+			matrix4 m(1);
+			m[1][1] = std::cos(angle);
+			m[2][1] = -std::sin(angle);
+			m[1][2] = std::sin(angle);
+			m[2][2] = std::cos(angle);
+			return m;
+		}
+		
+		static matrix4 rotateY(T angle) {
+			matrix4 m(1);
+			m[0][0] = std::cos(angle);
+			m[2][0] = std::sin(angle);
+			m[0][2] = -std::sin(angle);
+			m[2][2] = std::cos(angle);
+			return m;
+		}
+		
+		static matrix4 rotateZ(T angle) {
+			matrix4 m(1);
+			m[0][0] = std::cos(angle);
+			m[1][0] = -std::sin(angle);
+			m[0][1] = std::sin(angle);
+			m[1][1] = std::cos(angle);
+			return m;
+		}
 
 		explicit operator T *() {
 			return &(data[0].x);

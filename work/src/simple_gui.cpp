@@ -43,10 +43,10 @@ namespace cgra {
 
 		static bool createDeviceObjects() {
 			// Backup GL state
-			// GLint last_texture, last_array_buffer, last_vertex_array;
-			// glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-			// glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
-			// glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+			GLint last_texture, last_array_buffer, last_vertex_array;
+			glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+			glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
+			glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 
 			const GLchar *vertex_shader =
 				"#version 330\n"
@@ -130,8 +130,8 @@ namespace cgra {
 			glEnable(GL_BLEND);
 			glBlendEquation(GL_FUNC_ADD);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			// glDisable(GL_CULL_FACE);
-			// glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_SCISSOR_TEST);
 			glActiveTexture(GL_TEXTURE0);
 

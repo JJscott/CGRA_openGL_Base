@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "imgui.h"
 #include "opengl.hpp"
 
