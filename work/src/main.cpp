@@ -105,6 +105,7 @@ void render(int width, int height) {
 		geometry->glEnd();
 	}
 
+
 	glEnable(GL_DEPTH_TEST); // Enable flags for normal rendering
 	glDepthFunc(GL_LESS);
 
@@ -150,6 +151,14 @@ int main() {
 		abort(); // Unrecoverable error
 	}
 
+	// Force OpenGL to create a 3.3 core context
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// Disallow legacy functionality (helps OS X work)
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
 	// Get the version for GLFW for later
 	int glfwMajor, glfwMinor, glfwRevision;
 	glfwGetVersion(&glfwMajor, &glfwMinor, &glfwRevision);
@@ -169,6 +178,7 @@ int main() {
 	// Initialize GLEW
 	// must be done after creating GL context (glfwCreateWindow in this case)
 	GLenum err = glewInit();
+	glewExperimental = GL_TRUE; // required for full GLEW functionality for OpenGL 3.0+
 	if (GLEW_OK != err) { // Problem: glewInit failed, something is seriously wrong.
 		cerr << "Error: " << glewGetErrorString(err) << endl;
 		abort(); // Unrecoverable error
