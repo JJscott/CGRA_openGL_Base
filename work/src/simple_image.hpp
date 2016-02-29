@@ -4,6 +4,8 @@
 #include "cgra_math.hpp"
 #include "opengl.hpp"
 
+#include <string>
+#include <sstream>
 #include <stb_image.h>
 #include <stb_image_resize.h>
 #include <stb_image_write.h>
@@ -34,8 +36,8 @@ namespace cgra {
 
 		// returns a vector with RGBA values from the given cell
 		ivec4 getPixel(int x, int y) {
-			assert(x >=0 && y >=0 && x < width && y < height);
-			int idx = (x+(y*width)) * 4;
+			assert(x >=0 && y >=0 && x < w && y < h);
+			int idx = (x+(y*w)) * 4;
 			return ivec4(data[idx], data[idx+1], data[idx+2], data[idx+3]);
 		}
 
@@ -50,8 +52,8 @@ namespace cgra {
 
 
 		// outputs the image to the given filepath and appends ".png"
-		image save(const string &filepath) {
-			ostringstream ss;
+		image save(const std::string &filepath) {
+			std::ostringstream ss;
 			ss << filepath << ".png";
 			stbi_write_png(ss.str().c_str(), w, h, 4, &data[0], w*4);
 		}
