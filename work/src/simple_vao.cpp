@@ -17,7 +17,7 @@ namespace cgra {
 		}
 	}
 
-	void SimpleVAO::glBegin(GLenum mode) {
+	void SimpleVAO::begin(GLenum mode) {
 		if (m_begin) throw runtime_error("Begin can not be called twice.");
 		if (m_vao != 0) throw runtime_error("Can not call begin after VAO has been created.");
 
@@ -25,7 +25,7 @@ namespace cgra {
 		m_begin = true;
 	}
 
-	void SimpleVAO::glEnd() {
+	void SimpleVAO::end() {
 		if (!m_begin) return;
 		if (m_vao == 0) {
 			// Create Vertex Array Object (VAO) that can hold information
@@ -86,35 +86,35 @@ namespace cgra {
 	}
 
 
-	void SimpleVAO::glNormal3f(GLfloat x, GLfloat y, GLfloat z) {
+	void SimpleVAO::normal3f(GLfloat x, GLfloat y, GLfloat z) {
 		m_currentNormal = vec3(x, y, z);
 	}
 
-	void SimpleVAO::glNormal3fv(GLfloat *v) {
+	void SimpleVAO::normal3fv(GLfloat *v) {
 		m_currentNormal = vec3(v[0], v[1], v[2]);
 	}
 
-	void SimpleVAO::glNormal3f(vec3 v) {
+	void SimpleVAO::normal3f(vec3 v) {
 		m_currentNormal = v;
 	}
 
 
 
-	void SimpleVAO::glTexCoord2f(GLfloat u, GLfloat v) {
+	void SimpleVAO::texCoord2f(GLfloat u, GLfloat v) {
 		m_currentUV = vec2(u, v);
 	}
 
-	void SimpleVAO::glTexCoord2fv(GLfloat *v) {
+	void SimpleVAO::texCoord2fv(GLfloat *v) {
 		m_currentUV = vec2(v[0], v[1]);
 	}
 
-	void SimpleVAO::glTexCoord2f(vec2 v) {
+	void SimpleVAO::texCoord2f(vec2 v) {
 		m_currentUV = v;
 	}
 
 
 
-	void SimpleVAO::glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
+	void SimpleVAO::vertex3f(GLfloat x, GLfloat y, GLfloat z) {
 		if (!m_begin) throw runtime_error("Can not add vertex before calling begin.");
 		m_positions.push_back(x);
 		m_positions.push_back(y);
@@ -128,11 +128,11 @@ namespace cgra {
 		m_uvs.push_back(m_currentUV.y);
 	}
 
-	void SimpleVAO::glVertex3fv(GLfloat *v) {
+	void SimpleVAO::vertex3fv(GLfloat *v) {
 		glVertex3f(v[0], v[1], v[2]);
 	}
 
-	void SimpleVAO::glVertex3f(vec3 v) {
+	void SimpleVAO::vertex3f(vec3 v) {
 		glVertex3f(v.x, v.y, v.z);
 	}
 }

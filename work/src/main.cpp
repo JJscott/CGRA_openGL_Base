@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 #include "cgra_math.hpp"
 #include "opengl.hpp"
@@ -37,7 +38,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 	if(ImGui::IsMouseHoveringAnyWindow()) return; // block input with gui 
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT)
-		leftMouseDown = action == GLFW_PRESS;
+		leftMouseDown = (action == GLFW_PRESS);
 }
 
 
@@ -91,18 +92,25 @@ void render(int width, int height) {
 	static SimpleVAO *geometry = nullptr;
 	if (geometry == nullptr) {
 		geometry = new SimpleVAO();
-		geometry->glBegin(GL_QUADS);
+		geometry->begin(GL_TRIANGLES);
 
-		geometry->glTexCoord2f(0,0);
-		geometry->glVertex3f(-1,-1,0);
-		geometry->glTexCoord2f(1,0);
-		geometry->glVertex3f(1,-1,0);
-		geometry->glTexCoord2f(1,1);
-		geometry->glVertex3f(1,1,0);
-		geometry->glTexCoord2f(0,1);
-		geometry->glVertex3f(-1,1,0);
+		// first triangle
+		geometry->texCoord2f(0,0);
+		geometry->vertex3f(-1,-1,0);
+		geometry->texCoord2f(1,0);
+		geometry->vertex3f(1,-1,0);
+		geometry->texCoord2f(0,1);
+		geometry->vertex3f(-1,1,0);
 
-		geometry->glEnd();
+		// second triangle
+		geometry->texCoord2f(1,1);
+		geometry->vertex3f(1,1,0);
+		geometry->texCoord2f(1,0);
+		geometry->vertex3f(1,-1,0);
+		geometry->texCoord2f(0,1);
+		geometry->vertex3f(-1,1,0);
+
+		geometry->end();
 	}
 
 
@@ -138,6 +146,10 @@ void renderGUI() {
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
 }
+
+
+// Forward decleration for cleanliness
+void debugCallbackARB(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
 
 
 //Main program
@@ -176,9 +188,9 @@ int main() {
 
 
 	// Initialize GLEW
-	// must be done after creating GL context (glfwCreateWindow in this case)
-	GLenum err = glewInit();
+	// must be done after making a GL context current (glfwMakeContextCurrent in this case)
 	glewExperimental = GL_TRUE; // required for full GLEW functionality for OpenGL 3.0+
+	GLenum err = glewInit();
 	if (GLEW_OK != err) { // Problem: glewInit failed, something is seriously wrong.
 		cerr << "Error: " << glewGetErrorString(err) << endl;
 		abort(); // Unrecoverable error
@@ -198,6 +210,19 @@ int main() {
 	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetCharCallback(window, charCallback);
+
+
+	// Enable GL_ARB_debug_output if available. Not nessesary, just helpful
+	if (glfwExtensionSupported("GL_ARB_debug_output")) {
+		// This allows the error location to be determined from a stacktrace
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		// Set the up callback
+		glDebugMessageCallbackARB(debugCallbackARB, nullptr);
+		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, true);
+		cout << "GL_ARB_debug_output callback installed" << endl;
+	} else {
+		cout << "GL_ARB_debug_output not available. No worries." << endl;
+	}
 
 
 	// Initialize IMGUI
@@ -222,7 +247,6 @@ int main() {
 		// Grey/Blueish background
 		glClearColor(0.3f,0.3f,0.4f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 		// Main Render
 		render(width, height);
@@ -241,4 +265,82 @@ int main() {
 
 	SimpleGUI::shutdown();
 	glfwTerminate();
+}
+
+
+
+//
+// Fancy debug stuff
+//
+
+// function to translate source to string
+string getStringForSource(GLenum source) {
+
+	switch(source) {
+		case GL_DEBUG_SOURCE_API: 
+			return("API");
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+			return("Window System");
+		case GL_DEBUG_SOURCE_SHADER_COMPILER:
+			return("Shader Compiler");
+		case GL_DEBUG_SOURCE_THIRD_PARTY:
+			return("Third Party");
+		case GL_DEBUG_SOURCE_APPLICATION:
+			return("Application");
+		case GL_DEBUG_SOURCE_OTHER:
+			return("Other");
+		default:
+			return("n/a");
+	}
+}
+
+// function to translate severity to string
+string getStringForSeverity(GLenum severity) {
+
+	switch(severity) {
+		case GL_DEBUG_SEVERITY_HIGH: 
+			return("HIGH!");
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			return("Medium");
+		case GL_DEBUG_SEVERITY_LOW:
+			return("Low");
+		default:
+			return("n/a");
+	}
+}
+
+// function to translate type to string
+string getStringForType(GLenum type) {
+	switch(type) {
+		case GL_DEBUG_TYPE_ERROR: 
+			return("Error");
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+			return("Deprecated Behaviour");
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+			return("Undefined Behaviour");
+		case GL_DEBUG_TYPE_PORTABILITY:
+			return("Portability Issue");
+		case GL_DEBUG_TYPE_PERFORMANCE:
+			return("Performance Issue");
+		case GL_DEBUG_TYPE_OTHER:
+			return("Other");
+		default:
+			return("n/a");
+	}
+}
+
+// actually define the function
+void debugCallbackARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, GLvoid*) {
+	if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) return;
+
+	cerr << endl; // extra space
+
+	cerr << "Type: " <<
+		getStringForType(type) << "; Source: " <<
+		getStringForSource(source) <<"; ID: " << id << "; Severity: " <<
+		getStringForSeverity(severity) << endl;
+
+	cerr << message << endl;
+	
+	if (type == GL_DEBUG_TYPE_ERROR_ARB) throw runtime_error("");
 }

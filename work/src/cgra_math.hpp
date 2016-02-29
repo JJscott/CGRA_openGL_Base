@@ -13,8 +13,6 @@
 //
 // Features NOT avaliable include swizzling and some rarely used functions:
 // - Common Functions
-// - - isnan
-// - - isinf
 // - - floatBitsToInt
 // - - intBitsToFloat
 // - - fma
@@ -305,6 +303,18 @@ namespace cgra {
 
 	// Vector / Vector Operator Overloads
 	//
+
+	// equality
+	template <typename T>
+	inline bool operator==(const vector2<T> &lhs, const vector2<T> &rhs) {
+		return lhs.x == rhs.x && lhs.y == rhs.y;
+	}
+
+	// inequality
+	template <typename T>
+	inline bool operator!=(const vector2<T> &lhs, const vector2<T> &rhs) {
+		return !(lhs == rhs);
+	}
 
 	// negate
 	template <typename T>
@@ -917,6 +927,18 @@ namespace cgra {
 
 	// Vector / Vector Operator Overloads
 	//
+
+	// equality
+	template <typename T>
+	inline bool operator==(const vector3<T> &lhs, const vector3<T> &rhs) {
+		return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+	}
+
+	// inequality
+	template <typename T>
+	inline bool operator!=(const vector3<T> &lhs, const vector3<T> &rhs) {
+		return !(lhs == rhs);
+	}
 
 	// negate
 	template <typename T>
@@ -1557,6 +1579,18 @@ namespace cgra {
 
 	// Vector / Vector Operator Overloads
 	//
+
+	// equality
+	template <typename T>
+	inline bool operator==(const vector4<T> &lhs, const vector4<T> &rhs) {
+		return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
+	}
+
+	// inequality
+	template <typename T>
+	inline bool operator!=(const vector4<T> &lhs, const vector4<T> &rhs) {
+		return !(lhs == rhs);
+	}
 
 	// negate
 	template <typename T>
