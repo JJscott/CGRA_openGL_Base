@@ -73,8 +73,8 @@ void render(int width, int height) {
 
 	static GLuint texture = 0;
 	if (texture == 0) {
-		image<4> tex("work/res/textures/checkerboard.jpg");
-		texture = tex.make_texture();
+		image<4> img("work/res/textures/uv_texture.jpg");
+		texture = img.make_texture();
 	}
 
 	static SimpleVAO *geometry = nullptr;
@@ -82,23 +82,23 @@ void render(int width, int height) {
 		geometry = new SimpleVAO();
 		geometry->begin(GL_TRIANGLES);
 
-		geometry->normal3f(0,0,1);
+		geometry->set_normal(0,0,1);
 
 		// first triangle
-		geometry->texCoord2f(0,0);
-		geometry->vertex3f(-1,-1,0);
-		geometry->texCoord2f(1,0);
-		geometry->vertex3f(1,-1,0);
-		geometry->texCoord2f(0,1);
-		geometry->vertex3f(-1,1,0);
+		geometry->set_texcoord(0,0);
+		geometry->add_vertex(-1,-1,0);
+		geometry->set_texcoord(1,0);
+		geometry->add_vertex(1,-1,0);
+		geometry->set_texcoord(0,1);
+		geometry->add_vertex(-1,1,0);
 
 		// second triangle
-		geometry->texCoord2f(1,1);
-		geometry->vertex3f(1,1,0);
-		geometry->texCoord2f(1,0);
-		geometry->vertex3f(1,-1,0);
-		geometry->texCoord2f(0,1);
-		geometry->vertex3f(-1,1,0);
+		geometry->set_texcoord(1,1);
+		geometry->add_vertex(1,1,0);
+		geometry->set_texcoord(1,0);
+		geometry->add_vertex(1,-1,0);
+		geometry->set_texcoord(0,1);
+		geometry->add_vertex(-1,1,0);
 
 		geometry->end();
 	}

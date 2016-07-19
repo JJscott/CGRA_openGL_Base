@@ -23,6 +23,13 @@ namespace cgra {
 	template <> struct gl_image_format<3> : std::integral_constant<GLenum, GL_RGB> { };
 	template <> struct gl_image_format<4> : std::integral_constant<GLenum, GL_RGBA> { };
 
+	template <size_t> class image;
+	using image1f = image<1>;
+	using image2f = image<2>;
+	using image3f = image<3>;
+	using image4f = image<4>;
+
+
 	template <size_t N>
 	class image {
 	public:
@@ -53,23 +60,23 @@ namespace cgra {
 			stbi_set_flip_vertically_on_load(true);
 			int w, h;
 			if (stbi_is_hdr(filename.c_str())) {
-				float *img = stbi_loadf(filename.c_str(), &w, &h, nullptr, 4);
+				float *img = stbi_loadf(filename.c_str(), &w, &h, nullptr, N);
 				if (!img) {
 					std::cerr << "Failed to load image " << filename << " : " << stbi_failure_reason();
 					throw std::runtime_error("failed to load image " + filename);
 				} else {
-					m_data.assign(img, img + w * h * 4);
+					m_data.assign(img, img + w * h * N);
 					m_size = uvec2(w, h);
 					stbi_image_free(img);
 				}
 			} else {
-				unsigned char *img = stbi_load(filename.c_str(), &w, &h, nullptr, 4);
+				unsigned char *img = stbi_load(filename.c_str(), &w, &h, nullptr, N);
 				if (!img) {
 					std::cerr << "Failed to load image " << filename << " : " << stbi_failure_reason();
 					throw std::runtime_error("failed to load image " + filename);
 				} else {
-					m_data.assign(w * h * 4, 0.f);
-					for (int i = 0; i < w * h * 4; i++) {
+					m_data.assign(w * h * N, 0.f);
+					for (size_t i = 0; i < w * h * N; i++) {
 						m_data[i] = img[i] / 255.f;
 					}
 					m_size = uvec2(w, h);
@@ -77,6 +84,23 @@ namespace cgra {
 				}
 			}
 		}
+
+		// Use to get a float pointer to the data
+		float * data() { return m_data.data(); }
+		const float * data() const { return m_data.data(); }
+
+		// dimensions
+		size_t width() const { return m_size.x; }
+		size_t height() const { return m_size.y; }
+		uvec2 size() const { return m_size; }
+
+		// channels
+		size_t channels() const { return N; }
+
+		// wrapping strategy that accepts GL_CLAMP_TO_EDGE and GL_REPEAT
+		// works only for texture(const vec2 &)
+		vector2<GLenum> wrap() const { return m_wrap; }
+		void wrap(vector2<GLenum> w) { m_wrap = w; }
 
 
 		// returns a vector with RGBA values from the given cell
@@ -118,20 +142,18 @@ namespace cgra {
 			return tex;
 		}
 
-
-		// Use to get a float pointer to the data
-		float * data() { return m_data.data(); }
-		const float * data() const { return m_data.data(); }
-
-
 		// outputs the image to the given filepath and appends ".png"
-		void save(const std::string &filepath) {
+		void save(const std::string &filename) {
 			std::vector<unsigned char> char_data(m_size.x*m_size.y*N, 0);
 			for (size_t i = 0; i < m_size.x*m_size.y*N; i++)
 				char_data[i] = 255 * m_data[i];
 			std::ostringstream ss;
-			ss << filepath << ".png";
-			stbi_write_png(ss.str().c_str(), m_size.x, m_size.y, 4, char_data.data() + (m_size.y-1)*m_size.x*N, -m_size.x * 4);
+			ss << filename << ".png";
+			if (stbi_write_png(ss.str().c_str(), m_size.x, m_size.y, N, char_data.data() + (m_size.y-1)*m_size.x*N, -m_size.x * N)) {
+				std::cout << "Wrote image: " << ss.str() << std::endl;
+			} else {
+				std::cerr << "Failed to write image: " << ss.str() << std::endl;
+			}
 		}
 
 		static image screenshot(bool save) {
@@ -141,17 +163,13 @@ namespace cgra {
 
             image img(w, h);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-            glReadPixels(0, 0, w, h, GL_RGBA, GL_FLOAT, img.data());
+            glReadPixels(0, 0, w, h, gl_image_format<N>::value, GL_FLOAT, img.data());
 
             if (save) {
 	            ostringstream filename_ss;
-	            filename_ss << "screenshot_" << (chrono::system_clock::now().time_since_epoch() / 1ms) << ".png";
+	            filename_ss << "screenshot_" << (chrono::system_clock::now().time_since_epoch() / 1ms);
 	           	string filename = filename_ss.str();
-	            if (stbi_write_png(filename.c_str(), w, h, 4, data.data() + (h - 1) * w * 4, -w * 4)) {
-	                cout << "Wrote screenshot " << filename << endl;
-	            } else {
-	                cerr << "Failed to write screenshot " << filename << endl;
-	            }
+	            img.save(filename);
 	        }
 
             return img;

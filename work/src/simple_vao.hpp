@@ -36,17 +36,17 @@ namespace cgra {
 
 			void draw();
 
-			void normal3f(GLfloat x, GLfloat y, GLfloat z);
-			void normal3fv(GLfloat *v);
-			void normal3f(vec3 v);
+			void set_normal(GLfloat x, GLfloat y, GLfloat z);
+			void set_normal(GLfloat *v);
+			void set_normal(vec3 v);
 
-			void texCoord2f(GLfloat u, GLfloat v);
-			void texCoord2fv(GLfloat *v);
-			void texCoord2f(vec2 v);
+			void set_texcoord(GLfloat u, GLfloat v);
+			void set_texcoord(GLfloat *v);
+			void set_texcoord(vec2 v);
 
-			void vertex3f(GLfloat x, GLfloat y, GLfloat z);
-			void vertex3fv(GLfloat *v);
-			void vertex3f(vec3 v);
+			void add_vertex(GLfloat x, GLfloat y, GLfloat z);
+			void add_vertex(GLfloat *v);
+			void add_vertex(vec3 v);
 
 	};
 

@@ -91,41 +91,42 @@ namespace cgra {
 			// Tell opengl to draw our VAO using the draw mode and how many verticies to render
 			glDrawArrays(m_mode, 0, m_vert_count);
 		} else {
-			throw runtime_error("Can not draw uninitialized VAO");
+			throw runtime_error("Can not draw uninitialized VAO.");
 		}
 	}
 
 
-	void SimpleVAO::normal3f(GLfloat x, GLfloat y, GLfloat z) {
+	void SimpleVAO::set_normal(GLfloat x, GLfloat y, GLfloat z) {
 		m_currentNormal = vec3(x, y, z);
 	}
 
-	void SimpleVAO::normal3fv(GLfloat *v) {
+	void SimpleVAO::set_normal(GLfloat *v) {
 		m_currentNormal = vec3(v[0], v[1], v[2]);
 	}
 
-	void SimpleVAO::normal3f(vec3 v) {
+	void SimpleVAO::set_normal(vec3 v) {
 		m_currentNormal = v;
 	}
 
 
 
-	void SimpleVAO::texCoord2f(GLfloat u, GLfloat v) {
+	void SimpleVAO::set_texcoord(GLfloat u, GLfloat v) {
 		m_currentUV = vec2(u, v);
 	}
 
-	void SimpleVAO::texCoord2fv(GLfloat *v) {
+	void SimpleVAO::set_texcoord(GLfloat *v) {
 		m_currentUV = vec2(v[0], v[1]);
 	}
 
-	void SimpleVAO::texCoord2f(vec2 v) {
+	void SimpleVAO::set_texcoord(vec2 v) {
 		m_currentUV = v;
 	}
 
 
 
-	void SimpleVAO::vertex3f(GLfloat x, GLfloat y, GLfloat z) {
-		if (!m_begin) throw runtime_error("Can not add vertex before calling begin.");
+	void SimpleVAO::add_vertex(GLfloat x, GLfloat y, GLfloat z) {
+		if (!m_begin) throw runtime_error("Can not add vertex before calling begin().");
+		if (m_vao != 0) throw runtime_error("Can not add vertex after calling end().");
 		m_positions.push_back(x);
 		m_positions.push_back(y);
 		m_positions.push_back(z);
@@ -140,11 +141,11 @@ namespace cgra {
 		m_vert_count++;
 	}
 
-	void SimpleVAO::vertex3fv(GLfloat *v) {
+	void SimpleVAO::add_vertex(GLfloat *v) {
 		glVertex3f(v[0], v[1], v[2]);
 	}
 
-	void SimpleVAO::vertex3f(vec3 v) {
+	void SimpleVAO::add_vertex(vec3 v) {
 		glVertex3f(v.x, v.y, v.z);
 	}
 }
