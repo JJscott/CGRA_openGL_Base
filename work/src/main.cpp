@@ -140,7 +140,7 @@ void renderGUI() {
 
 
 // Forward decleration for cleanliness
-void debugCallbackARB(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
+void APIENTRY debugCallbackARB(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
 
 
 //Main program
@@ -154,13 +154,13 @@ int main() {
 		abort(); // Unrecoverable error
 	}
 
-	// Force OpenGL to create a 3.3 core context
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//// Force OpenGL to create a 3.3 core context
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// Disallow legacy functionality (helps OS X work)
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	//// Disallow legacy functionality (helps OS X work)
+	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	// Get the version for GLFW for later
 	int glfwMajor, glfwMinor, glfwRevision;
@@ -321,7 +321,7 @@ string getStringForType(GLenum type) {
 }
 
 // actually define the function
-void debugCallbackARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, GLvoid*) {
+void APIENTRY debugCallbackARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, GLvoid*) {
 	if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
 	cerr << endl; // extra space

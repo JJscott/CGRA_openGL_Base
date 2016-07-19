@@ -9,6 +9,8 @@
 #include "cgra_math.hpp"
 #include "opengl.hpp"
 
+#include <string>
+#include <sstream>
 #include <stb_image.h>
 #include <stb_image_resize.h>
 #include <stb_image_write.h>
@@ -124,29 +126,9 @@ namespace cgra {
 
 		// outputs the image to the given filepath and appends ".png"
 		void save(const std::string &filepath) {
-
-	  //       if (take_screenshot) {
-	  //           glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	  //           vector<unsigned char> data(w * h * 4, 0);
-	  //           glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
-	  //           ostringstream filenamess;
-	  //           filenamess << "screenshot" << (chrono::system_clock::now().time_since_epoch() / 1ms) << ".png";
-	  //           string filename = filenamess.str();
-	  //           filesystem::path filepath = filename;
-	  //           filepath = filesystem::canonical(filepath);
-	  //           filename = filepath.string();
-	  //           if (stbi_write_png(filename.c_str(), w, h, 4, data.data() + (h - 1) * w * 4, -w * 4)) {
-	  //               info << "Wrote screenshot " << filename;
-	  //           } else {
-	  //               error << "Failed to write screenshot " << filename;
-	  //           }
-	  //           take_screenshot = false;
-	  //       }
-
 			std::vector<unsigned char> char_data(m_size.x*m_size.y*N, 0);
 			for (size_t i = 0; i < m_size.x*m_size.y*N; i++)
 				char_data[i] = 255 * m_data[i];
-
 			std::ostringstream ss;
 			ss << filepath << ".png";
 			stbi_write_png(ss.str().c_str(), m_size.x, m_size.y, 4, char_data.data() + (m_size.y-1)*m_size.x*N, -m_size.x * 4);
