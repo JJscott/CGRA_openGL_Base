@@ -71,6 +71,8 @@ void render(int width, int height) {
 			// {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_texture.glsl");
 	}
 
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 9001);
+
 	static GLuint texture = 0;
 	if (texture == 0) {
 		image<4> tex("work/res/textures/checkerboard.jpg");
@@ -140,7 +142,7 @@ void renderGUI() {
 
 
 // Forward decleration for cleanliness
-void APIENTRY debugCallbackARB(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
+void APIENTRY debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
 
 
 //Main program
@@ -165,6 +167,10 @@ int main() {
 	// Get the version for GLFW for later
 	int glfwMajor, glfwMinor, glfwRevision;
 	glfwGetVersion(&glfwMajor, &glfwMinor, &glfwRevision);
+
+	// Request a debug context so we get debug callbacks.
+	// Remove this for possible GL performance increases.
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
 	// Create a windowed mode window and its OpenGL context
 	window = glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
@@ -203,12 +209,12 @@ int main() {
 	glfwSetCharCallback(window, charCallback);
 
 
-	// Enable GL_ARB_debug_output if available. Not nessesary, just helpful
+	// Enable GL_ARB_debug_output if available. Not necessary, just helpful
 	if (glfwExtensionSupported("GL_ARB_debug_output")) {
 		// This allows the error location to be determined from a stacktrace
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		// Set the up callback
-		glDebugMessageCallbackARB(debugCallbackARB, nullptr);
+		// Setup up the callback
+		glDebugMessageCallbackARB(debugCallback, nullptr);
 		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, true);
 		cout << "GL_ARB_debug_output callback installed" << endl;
 	} else {
@@ -265,73 +271,67 @@ int main() {
 //
 
 // function to translate source to string
-string getStringForSource(GLenum source) {
-
+const char * getStringForSource(GLenum source) {
 	switch(source) {
-		case GL_DEBUG_SOURCE_API: 
-			return("API");
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-			return("Window System");
-		case GL_DEBUG_SOURCE_SHADER_COMPILER:
-			return("Shader Compiler");
-		case GL_DEBUG_SOURCE_THIRD_PARTY:
-			return("Third Party");
-		case GL_DEBUG_SOURCE_APPLICATION:
-			return("Application");
-		case GL_DEBUG_SOURCE_OTHER:
-			return("Other");
-		default:
-			return("n/a");
+	case GL_DEBUG_SOURCE_API: 
+		return "API";
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+		return "Window System";
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:
+		return "Shader Compiler";
+	case GL_DEBUG_SOURCE_THIRD_PARTY:
+		return "Third Party";
+	case GL_DEBUG_SOURCE_APPLICATION:
+		return "Application";
+	case GL_DEBUG_SOURCE_OTHER:
+		return "Other";
+	default:
+		return "n/a";
 	}
 }
 
 // function to translate severity to string
-string getStringForSeverity(GLenum severity) {
-
+const char * getStringForSeverity(GLenum severity) {
 	switch(severity) {
-		case GL_DEBUG_SEVERITY_HIGH: 
-			return("HIGH!");
-		case GL_DEBUG_SEVERITY_MEDIUM:
-			return("Medium");
-		case GL_DEBUG_SEVERITY_LOW:
-			return("Low");
-		default:
-			return("n/a");
+	case GL_DEBUG_SEVERITY_HIGH: 
+		return "High";
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		return "Medium";
+	case GL_DEBUG_SEVERITY_LOW:
+		return "Low";
+	case GL_DEBUG_SEVERITY_NOTIFICATION:
+		return "None";
+	default:
+		return "n/a";
 	}
 }
 
 // function to translate type to string
-string getStringForType(GLenum type) {
+const char * getStringForType(GLenum type) {
 	switch(type) {
-		case GL_DEBUG_TYPE_ERROR: 
-			return("Error");
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-			return("Deprecated Behaviour");
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-			return("Undefined Behaviour");
-		case GL_DEBUG_TYPE_PORTABILITY:
-			return("Portability Issue");
-		case GL_DEBUG_TYPE_PERFORMANCE:
-			return("Performance Issue");
-		case GL_DEBUG_TYPE_OTHER:
-			return("Other");
-		default:
-			return("n/a");
+	case GL_DEBUG_TYPE_ERROR: 
+		return "Error";
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		return "Deprecated Behaviour";
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		return "Undefined Behaviour";
+	case GL_DEBUG_TYPE_PORTABILITY:
+		return "Portability";
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		return "Performance";
+	case GL_DEBUG_TYPE_OTHER:
+		return "Other";
+	default:
+		return "n/a";
 	}
 }
 
 // actually define the function
-void APIENTRY debugCallbackARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, GLvoid*) {
-	if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) return;
+void APIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, GLvoid*) {
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
-	cerr << endl; // extra space
+	cerr << "GL [" << getStringForSource(source) << "] " << getStringForType(type) << ' ' << id << " : ";
+	cerr << message << " (Severity: " << getStringForSeverity(severity) << ')' << endl;
 
-	cerr << "Type: " <<
-		getStringForType(type) << "; Source: " <<
-		getStringForSource(source) <<"; ID: " << id << "; Severity: " <<
-		getStringForSeverity(severity) << endl;
-
-	cerr << message << endl;
-	
-	if (type == GL_DEBUG_TYPE_ERROR_ARB) throw runtime_error("");
+	if (type == GL_DEBUG_TYPE_ERROR_ARB) throw runtime_error("GL Error: "s + message);
 }
