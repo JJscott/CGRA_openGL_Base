@@ -89,7 +89,7 @@ namespace cgra {
 			// Bind our VAO which sets up all our buffers and data for us
 			glBindVertexArray(m_vao);
 			// Tell opengl to draw our VAO using the draw mode and how many verticies to render
-			glDrawArrays(m_mode, 0, m_positions.size()/3);
+			glDrawArrays(m_mode, 0, m_vert_count);
 		} else {
 			throw runtime_error("Can not draw uninitialized VAO");
 		}
@@ -136,6 +136,8 @@ namespace cgra {
 
 		m_uvs.push_back(m_currentUV.x);
 		m_uvs.push_back(m_currentUV.y);
+
+		m_vert_count++;
 	}
 
 	void SimpleVAO::vertex3fv(GLfloat *v) {

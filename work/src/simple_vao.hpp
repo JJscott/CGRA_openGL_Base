@@ -25,6 +25,8 @@ namespace cgra {
 			bool m_begin = false;
 			GLenum m_mode = 0;
 
+			GLuint m_vert_count = 0;
+
 		public:
 			SimpleVAO();
 			~SimpleVAO();

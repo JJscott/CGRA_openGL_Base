@@ -67,11 +67,9 @@ void render(int width, int height) {
 	static GLuint shader = 0;
 	if (shader == 0) {
 		shader = makeShaderProgramFromFile("330 core",
-			{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
-			// {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_texture.glsl");
+			//{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
+			{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_texture.glsl");
 	}
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 9001);
 
 	static GLuint texture = 0;
 	if (texture == 0) {
@@ -329,6 +327,9 @@ const char * getStringForType(GLenum type) {
 // actually define the function
 void APIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, GLvoid*) {
 	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
+
+	// nvidia: avoid debug spam about attribute offsets
+	if (id == 131076) return;
 
 	cerr << "GL [" << getStringForSource(source) << "] " << getStringForType(type) << ' ' << id << " : ";
 	cerr << message << " (Severity: " << getStringForSeverity(severity) << ')' << endl;
