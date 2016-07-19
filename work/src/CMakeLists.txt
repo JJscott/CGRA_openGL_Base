@@ -21,16 +21,9 @@ SET(sources
 	"simple_vao.cpp"
 )
 
-SET(test_sources
-	"cgra_math.hpp"
-	"cgra_math_test.cpp"
-)
 
 # Add executable target and link libraries
 # You do not need to touch this
 add_executable(${CGRA_PROJECT} ${headers} ${sources})
 target_link_libraries(${CGRA_PROJECT} PRIVATE glew glfw ${GLFW_LIBRARIES})
 target_link_libraries(${CGRA_PROJECT} PRIVATE stb imgui)
-
-
-add_executable(cgra_math_tests ${test_sources})

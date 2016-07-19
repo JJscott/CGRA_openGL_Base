@@ -23,7 +23,7 @@ namespace cgra {
 			GLuint m_vbo_uv = 0;
 
 			bool m_begin = false;
-			GLenum m_mode;
+			GLenum m_mode = 0;
 
 		public:
 			SimpleVAO();

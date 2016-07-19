@@ -110,9 +110,9 @@ namespace cgra {
 			createFontsTexture();
 
 			// Restore modified GL state
-			// glBindTexture(GL_TEXTURE_2D, last_texture);
-			// glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
-			// glBindVertexArray(last_vertex_array);
+			glBindTexture(GL_TEXTURE_2D, last_texture);
+			glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
+			glBindVertexArray(last_vertex_array);
 
 			return true;
 		}
@@ -265,9 +265,7 @@ namespace cgra {
 			io.RenderDrawListsFn = renderDrawLists;
 			io.SetClipboardTextFn = setClipboardText;
 			io.GetClipboardTextFn = getClipboardText;
-		#ifdef _WIN32
-			io.ImeWindowHandle = glfwGetWin32Window(g_window);
-		#endif
+
 			if (install_callbacks) {
 				glfwSetMouseButtonCallback(window, mouseButtonCallback);
 				glfwSetScrollCallback(window, scrollCallback);

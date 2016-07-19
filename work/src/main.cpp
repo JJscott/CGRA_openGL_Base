@@ -24,7 +24,7 @@ bool leftMouseDown = false;
 vec2 mousePosition;
 
 
-void cursorPosCallback(GLFWwindow* win, double xpos, double ypos) {
+void cursorPosCallback(GLFWwindow *, double xpos, double ypos) {
 	if (leftMouseDown) {
 		yaw += radians(mousePosition.x - xpos);
 		pitch += radians(mousePosition.y - ypos);
@@ -67,32 +67,22 @@ void render(int width, int height) {
 	static GLuint shader = 0;
 	if (shader == 0) {
 		shader = makeShaderProgramFromFile("330 core",
-			{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_texture.glsl");
+			{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
+			// {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_texture.glsl");
 	}
 
 	static GLuint texture = 0;
 	if (texture == 0) {
-		image tex("work/res/textures/checkerboard.jpg");
-
-		glActiveTexture(GL_TEXTURE0); // Use slot 0, need to use GL_TEXTURE1 ... etc if using more than one texture PER OBJECT
-		glGenTextures(1, &texture); // Generate texture ID
-		glBindTexture(GL_TEXTURE_2D, texture); // Bind it as a 2D texture
-		
-		// Setup sampling strategies for the bound texture
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		// Finally, actually put data into our texture
-		glTexImage2D(GL_TEXTURE_2D, 0, tex.glFormat(), tex.w, tex.h, 0, tex.glFormat(), GL_UNSIGNED_BYTE, tex.dataPointer());
-		glGenerateMipmap(GL_TEXTURE_2D);
+		image<4> tex("work/res/textures/checkerboard.jpg");
+		texture = tex.make_texture();
 	}
 
 	static SimpleVAO *geometry = nullptr;
 	if (geometry == nullptr) {
 		geometry = new SimpleVAO();
 		geometry->begin(GL_TRIANGLES);
+
+		geometry->normal3f(0,0,1);
 
 		// first triangle
 		geometry->texCoord2f(0,0);
@@ -128,9 +118,9 @@ void render(int width, int height) {
 	// Set up the matricies / uniforms
 	// 
 	mat4 proj = mat4::perspectiveProjection(1.0, float(width)/height, 0.1, 100.0);
-	mat4 view = mat4::translate(0,0,-5) * mat4::rotateX(-pitch) * mat4::rotateY(-yaw);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.dataPointer());
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.dataPointer());
+	mat4 view = mat4::translate(0,0,-5) * mat4::rotate_x(-pitch) * mat4::rotate_y(-yaw);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.data());
 
 
 	geometry->draw();
@@ -145,6 +135,7 @@ void renderGUI() {
 	ImGui::Begin("Debug");
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
+
 }
 
 

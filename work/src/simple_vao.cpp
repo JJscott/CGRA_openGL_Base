@@ -18,16 +18,16 @@ namespace cgra {
 	}
 
 	void SimpleVAO::begin(GLenum mode) {
-		if (m_begin) throw runtime_error("Begin can not be called twice.");
-		if (m_vao != 0) throw runtime_error("Can not call begin after VAO has been created.");
+		if (m_begin) throw runtime_error("begin() can not be called twice.");
+		if (m_vao != 0) throw runtime_error("begin() can not be called after end().");
 
 		m_mode = mode;
 		m_begin = true;
 	}
 
 	void SimpleVAO::end() {
-		if (!m_begin) return;
 		if (m_vao == 0) {
+			if (!m_begin) throw runtime_error("begin() must be called before end().");
 			// Create Vertex Array Object (VAO) that can hold information
 			// about how the VBOs should be set up
 			glGenVertexArrays(1, &m_vao);
@@ -71,8 +71,16 @@ namespace cgra {
 			// not nessesary, but good practice
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
+
+			// Clean up the data
+			m_positions.clear();
+			m_normals.clear();
+			m_uvs.clear();
+
 		}
-		m_begin = false;
+		else {
+			throw runtime_error("end() can not be called twice.");
+		}
 	}
 
 
@@ -82,6 +90,8 @@ namespace cgra {
 			glBindVertexArray(m_vao);
 			// Tell opengl to draw our VAO using the draw mode and how many verticies to render
 			glDrawArrays(m_mode, 0, m_positions.size()/3);
+		} else {
+			throw runtime_error("Can not draw uninitialized VAO");
 		}
 	}
 

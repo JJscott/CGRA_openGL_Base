@@ -12,7 +12,18 @@
 // accessed by mat[column][row].
 //
 // Features NOT avaliable include swizzling and some rarely used functions:
+// - Angle and Trigonometry Functions
+// - - sinh
+// - - cosh
+// - - tanh
+// - - asinh
+// - - acosh
+// - - atanh
 // - Common Functions
+// - - trunc
+// - - round
+// - - roundEven
+// - - modf
 // - - floatBitsToInt
 // - - intBitsToFloat
 // - - fma
@@ -20,6 +31,7 @@
 // - - ldexp
 // - Floating-Point Pack and Unpack Functions
 // - Vector Relational Functions
+// - - not (as it is a keyword in C++)
 // - Integer Functions
 //
 //
@@ -39,6 +51,48 @@
 //
 //----------------------------------------------------------------------------
 
+
+// TODO fix this section on extensions / Additions
+
+// --- scalar ---
+// pi, e, phi
+// angle conversiona dn few other things
+// random for all primitive types
+
+// --- vector ---
+// project
+// reject
+// angle (between vectors)
+// random and other static stuff
+// vector<bool> operator overload
+
+// --- matrix ---
+// mat4 static stuff
+
+// --- quaternions ---
+//
+//----------------------------------------------------------------------------
+
+
+// TODO Features to add
+
+// vector operator overload < <= > >=
+// vector<bool> operator overload && ||
+// mat4 axis angle static
+// functions like clamp for scalars
+// vector and scalar functions for cot sec csc, acot asec acsc
+// vector and scalar functions for coth sech csch, acoth asech acsch
+//
+// gl overloads for vector/matrix types
+
+// make pair on vector2 ??
+// operator std::pair<T, T>() const {
+// return std::make_pair(w, h);
+// }
+//
+//----------------------------------------------------------------------------
+
+
 #pragma once
 
 #include <cassert>
@@ -52,99 +106,278 @@
 #include <string>
 #include <type_traits>
 
+
+// We undefine min and max macros if they exist
+// so it doesn't interfer with our function overloads
+// @$#! macros...
+#undef MIN
+#undef min
+#undef MAX
+#undef max
+
+
 namespace cgra {
 
 	template <typename> class vector2;
-	using  vec2 = vector2<float>;
+	template <typename> class vector3;
+	template <typename> class vector4;
+
+	template <typename> class matrix2;
+	template <typename> class matrix3;
+	template <typename> class matrix4;
+
+	template <typename> class quaternion;
+
+
+	// Define naming conventions
+#ifdef CGRA_INITIAL3D_NAMES
+	using vec2f = vector2<float>;
+	using vec2d = vector2<double>;
+	using vec2i = vector2<int>;
+	using vec2u = vector2<unsigned>;
+	using vec2b = vector2<bool>;
+
+	using vec3f = vector3<float>;
+	using vec3d = vector3<double>;
+	using vec3i = vector3<int>;
+	using vec3u = vector3<unsigned>;
+	using vec3b = vector3<bool>;
+
+	using vec4f = vector4<float>;
+	using vec4d = vector4<double>;
+	using vec4i = vector4<int>;
+	using vec4u = vector4<unsigned>;
+	using vec4b = vector4<bool>;
+
+	using mat2f = matrix2<float>;
+	using mat2d = matrix2<double>;
+	using mat3f = matrix3<float>;
+	using mat3d = matrix3<double>;
+	using mat4f = matrix4<float>;
+	using mat4d = matrix4<double>;
+
+	using quatf = quaternion<float>;
+	using quatd = quaternion<double>;
+
+#else
+	using vec2 = vector2<float>;
 	using dvec2 = vector2<double>;
 	using ivec2 = vector2<int>;
 	using uvec2 = vector2<unsigned>;
 	using bvec2 = vector2<bool>;
 
-	template <typename> class vector3;
-	using  vec3 = vector3<float>;
+	using vec3 = vector3<float>;
 	using dvec3 = vector3<double>;
 	using ivec3 = vector3<int>;
 	using uvec3 = vector3<unsigned>;
 	using bvec3 = vector3<bool>;
 
-	template <typename> class vector4;
-	using  vec4 = vector4<float>;
+	using vec4 = vector4<float>;
 	using dvec4 = vector4<double>;
 	using ivec4 = vector4<int>;
 	using uvec4 = vector4<unsigned>;
 	using bvec4 = vector4<bool>;
 
-	template <typename> class matrix2;
-	using  mat2 = matrix2<float>;
+	using mat2 = matrix2<float>;
 	using dmat2 = matrix2<double>;
-
-	template <typename> class matrix3;
-	using  mat3 = matrix3<float>;
+	using mat3 = matrix3<float>;
 	using dmat3 = matrix3<double>;
-
-	template <typename> class matrix4;
-	using  mat4 = matrix4<float>;
+	using mat4 = matrix4<float>;
 	using dmat4 = matrix4<double>;
 
-	namespace math {
+	using quat = quaternion<float>;
+	using dquat = quaternion<double>;
 
-		// random
-		template <typename T> inline T random(T lower = 0, T upper = 1) {
-			static std::default_random_engine re { std::random_device()() };
-			std::uniform_real_distribution<double> dist(lower, upper);
-			return T(dist(re));
-		}
+#endif
 
-		// pi
-		inline double pi() {
-			return 3.1415926535897932384626433832795;
-		}
 
-		// natural log base
-		inline double e() {
-			return 2.7182818284590452353602874713527;
-		}
+	// Meta-functions for vector type by size
+	template <typename T, size_t N>
+	struct vec_by_size { };
 
-		// golden ratio
-		inline double phi() {
-			return 1.61803398874989484820458683436563811;
-		}
+	template <typename T>
+	struct vec_by_size<T, 1> {
+		using type = T;
+	};
+
+	template <typename T>
+	struct vec_by_size<T, 2> {
+		using type = vector2<T>;
+	};
+
+	template <typename T>
+	struct vec_by_size<T, 3> {
+		using type = vector3<T>;
+	};
+
+	template <typename T>
+	struct vec_by_size<T, 4> {
+		using type = vector4<T>;
+	};
+
+	template <typename T, size_t N>
+	using vec_by_size_t = typename vec_by_size<T, N>::type;
+
+
+	// Meta-functions for matrix type by size
+	template <typename T, size_t N>
+	struct mat_by_size { };
+
+	template <typename T>
+	struct mat_by_size<T, 1> {
+		using type = T;
+	};
+
+	template <typename T>
+	struct mat_by_size<T, 2> {
+		using type = matrix2<T>;
+	};
+
+	template <typename T>
+	struct mat_by_size<T, 3> {
+		using type = matrix3<T>;
+	};
+
+	template <typename T>
+	struct mat_by_size<T, 4> {
+		using type = matrix4<T>;
+	};
+
+	template <typename T, size_t N>
+	using mat_by_size_t = typename mat_by_size<T, N>::type;
+
+
+
+	// pi
+	constexpr double pi = 3.1415926535897932384626433832795;
+
+	// natural log base
+	constexpr double e = 2.7182818284590452353602874713527;
+
+	// golden ratio
+	constexpr double phi = 1.61803398874989484820458683436563811;
+
+
+	// Angle and Trigonometry Functions
+	// 
+
+	template <typename T> inline T radians(T a) {
+		return a * pi / 180.0;
 	}
 
-	template <typename T> inline T radians(T val) {
-		return val * math::pi() / 180.0;
+	template <typename T> inline T degrees(T a) {
+		return a / pi * 180.0;
 	}
 
-	template <typename T> inline T degrees(T val) {
-		return val / math::pi() * 180.0;
-	}
+	using std::sin;
 
-	template <typename T> inline T log2(const T &a) {
-		return std::log(a) * 1.4426950408889634073599246810019;
-	}
+	using std::cos;
 
-	template <typename T> inline T exp2(const T &a) {
-		return std::pow(2, a);
-	}
+	using std::tan;
+
+	using std::asin;
+
+	using std::acos;
+
+	using std::atan;
 
 	template <typename T> inline std::enable_if_t<std::is_arithmetic<T>::value, T> atan(const T &y, const T &x) {
 		return std::atan2(y, x);
 	}
 
 
-	template <typename T> inline int sign(T val) {
-		return (T(0) < val) - (val < T(0));
+	// template <typename T> inline std::enable_if_t<std::is_arithmetic<T>::value, T> sinh(const T &val) {
+	// 	return std::atan2(y, x);
+	// }
+
+
+
+
+
+
+	// Exponential Functions
+	//
+	using std::pow;
+
+	using std::exp;
+
+	using std::log;
+
+	template <typename T> inline T exp2(const T &a) {
+		return pow(T(2), a);
 	}
+
+	template <typename T> inline T log2(const T &a) {
+		return log(a) * T(1.4426950408889634073599246810019);
+	}
+
+	using std::sqrt;
+	
+	// template <typename T> inline T inversesqrt(const T &a) {
+	// 	return T(1)/sqrt(a);
+	// }
+
+
+	// Common Functions
+	//
+
+	using std::abs;
+
+	template <typename T> inline int sign(T a) {
+		return (T(0) < a) - (a < T(0));
+	}
+
+	using std::floor;
+
+	using std::ceil;
+
+	// template <typename T> inline T fract(const T &a) {
+	// 	return a - floor(a);
+	// }
+
+	// template <typename T> inline T mod(const T &a, const T &b) {
+	// 	return a - b * floor(a/b);
+	// }
+
+	using std::min;
+
+	using std::max;
+
+	// // clamp scalars between b and c
+	// template <typename T> inline T clamp(const T &a, const T &b, const T &c) {
+	// 	return min(max(a, b), c);
+	// }
+
+	// // linear blend of scalars : x*(1-a) + y*a
+	// template <typename T> inline T mix(const T &a, const T &b, const T &c) {
+	// 	return (T(1)-a) * b + a * c;
+	// }
+
+	// // 0.0 if edge < v, else 1.0
+	// template <typename T> inline T step(const T &a, const T &b) {
+	// 	return (a<b)? T(0) : T(1);
+	// }
+
+	// // smooth hermit interpolation
+	// template <typename T> inline T smoothstep(const T &a, const T &b, const T &c) {
+	// 	auto t = clamp((c-a)/(b-a), T(0), T(1));
+	// 	return t * t * (T(3)-T(2)*t);
+	// }
+
+	template <typename T> inline bool isinf(T a) {
+		return std::numeric_limits<T>::max() < std::abs(a);
+	}
+
+	template <typename T> inline bool isnan(T a) {
+		return a != a;
+	}
+
+
 
 	template <typename T> inline T inf() {
 		// use like: inf<float>()
 		// only for floating point types
 		return std::numeric_limits<T>::infinity();
-	}
-
-	template <typename T> inline bool isinf(T a) {
-		return std::numeric_limits<T>::max() < std::abs(a);
 	}
 
 	template <typename T> inline T nan() {
@@ -153,8 +386,35 @@ namespace cgra {
 		return T(0) / T(0);
 	}
 
-	template <typename T> inline bool isnan(T a) {
-		return a != a;
+	// random
+	template <typename T> inline T random(T lower, T upper) {
+		using dist_t = std::conditional_t<
+			std::is_floating_point<T>::value,
+			std::uniform_real_distribution<T>,
+			std::conditional_t<
+				std::is_integral<T>::value,
+				std::uniform_int_distribution<
+					std::conditional_t<
+						sizeof(T) < sizeof(short),
+						std::conditional_t<
+							std::is_signed<T>::value,
+							short,
+							unsigned short
+						>,
+						T
+					>
+				>,
+				void
+			>
+		>;
+		static thread_local std::default_random_engine re { std::random_device()() };
+		dist_t dist(lower, upper);
+		return dist(re);
+	}
+
+	// random
+	template <typename T> inline T random(T upper = T(1)) {
+		return random<T>(T(0), upper);
 	}
 
 
@@ -173,8 +433,8 @@ namespace cgra {
 	template <typename T>
 	class vector2 {
 	public:
-		union{ T x; T r;};
-		union{ T y; T g;};
+		union{ T x; T r; T s;};
+		union{ T y; T g; T t;};
 
 		// T constructors
 		vector2() : x(0), y(0) {}
@@ -184,8 +444,12 @@ namespace cgra {
 		template <typename U>
 		vector2(const vector2<U> &other) : x(other.x), y(other.y) { }
 
-		static vector2 random(T lower = 0, T upper = 1) { 
-			return vector2(math::random<T>(lower, upper), math::random<T>(lower, upper));
+		static vector2 random(T upper = 1) { 
+			return vector2(cgra::random<T>(T(0), upper), cgra::random<T>(T(0), upper));
+		}
+
+		static vector2 random(T lower, T upper) { 
+			return vector2(cgra::random<T>(lower, upper), cgra::random<T>(lower, upper));
 		}
 
 		static vector2 i() {return vector2(1, 0);}
@@ -197,15 +461,11 @@ namespace cgra {
 			return v;
 		}
 
-		explicit operator T *() {
+		T * data() {
 			return &(x);
 		}
 
-		T * dataPointer() {
-			return &(x);
-		}
-
-		const T * dataPointer() const{
+		const T * data() const{
 			return &(x);
 		}
 
@@ -568,7 +828,13 @@ namespace cgra {
 		return vector2<std::common_type_t<T1, T2>>(std::min<common_t>(lhs.x, rhs), std::min<common_t>(lhs.y, rhs));
 	}
 
-	// minimum of vector components
+	// minimum of vector components (same type)
+	template <typename T>
+	inline auto min(const vector2<T> &lhs, const vector2<T> &rhs) {
+		return vector2<T>(std::min<T>(lhs.x, rhs.x), std::min<T>(lhs.y, rhs.y));
+	}
+
+	// minimum of vector components (different types)
 	template <typename T1, typename T2>
 	inline auto min(const vector2<T1> &lhs, const vector2<T2> &rhs) {
 		using common_t = std::common_type_t<T1, T2>;
@@ -582,7 +848,13 @@ namespace cgra {
 		return vector2<common_t>(std::max<common_t>(lhs.x, rhs), std::max<common_t>(lhs.y, rhs));
 	}
 
-	// maximum of vector components
+	// maximum of vector components (same type)
+	template <typename T>
+	inline auto max(const vector2<T> &lhs, const vector2<T> &rhs) {
+		return vector2<T>(std::max<T>(lhs.x, rhs.x), std::max<T>(lhs.y, rhs.y));
+	}
+
+	// maximum of vector components (different types)
 	template <typename T1, typename T2>
 	inline auto max(const vector2<T1> &lhs, const vector2<T2> &rhs) {
 		using common_t = std::common_type_t<T1, T2>;
@@ -647,14 +919,14 @@ namespace cgra {
 
 	// boolean vector of component-wise isnan
 	template <typename T>
-	inline bvec2 isnan(const vector2<T> &v) {
-		return bvec2(isnan(v.x), isnan(v.y));
+	inline vector2<bool> isnan(const vector2<T> &v) {
+		return vector2<bool>(isnan(v.x), isnan(v.y));
 	}
 
 	// boolean vector of component-wise isinf
 	template <typename T>
-	inline bvec2 isinf(const vector2<T> &v) {
-		return bvec2(isinf(v.x), isinf(v.y));
+	inline vector2<bool> isinf(const vector2<T> &v) {
+		return vector2<bool>(isinf(v.x), isinf(v.y));
 	}
 
 
@@ -716,50 +988,76 @@ namespace cgra {
 
 	// component-wise compare of l<r
 	template <typename T1, typename T2>
-	inline bvec2 lessThan(const vector2<T1> &lhs, const vector2<T2> &rhs) {
-		return bvec2(lhs.x < rhs.x, lhs.y < rhs.y);
+	inline vector2<bool> lessThan(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return vector2<bool>(lhs.x < rhs.x, lhs.y < rhs.y);
 	}
 
 	// component-wise compare of l<=r
 	template <typename T1, typename T2>
-	inline bvec2 lessThanEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
-		return bvec2(lhs.x <= rhs.x, lhs.y <= rhs.y);
+	inline vector2<bool> lessThanEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return vector2<bool>(lhs.x <= rhs.x, lhs.y <= rhs.y);
 	}
 
 	// component-wise compare of l>r
 	template <typename T1, typename T2>
-	inline bvec2 greaterThan(const vector2<T1> &lhs, const vector2<T2> &rhs) {
-		return bvec2(lhs.x < rhs.x, lhs.y < rhs.y);
+	inline vector2<bool> greaterThan(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return vector2<bool>(lhs.x > rhs.x, lhs.y > rhs.y);
 	}
 
 	// component-wise compare of l>=r
 	template <typename T1, typename T2>
-	inline bvec2 greaterThanEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
-		return bvec2(lhs.x >= rhs.x, lhs.y >= rhs.y);
+	inline vector2<bool> greaterThanEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return vector2<bool>(lhs.x >= rhs.x, lhs.y >= rhs.y);
 	}
 
 	// component-wise compare of l==r
 	template <typename T1, typename T2>
-	inline bvec2 equal(const vector2<T1> &lhs, const vector2<T2> &rhs) {
-		return bvec2(lhs.x == rhs.x, lhs.y == rhs.y);
+	inline vector2<bool> equal(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return vector2<bool>(lhs.x == rhs.x, lhs.y == rhs.y);
 	}
 
 	// component-wise compare of l!=r
 	template <typename T1, typename T2>
-	inline bvec2 notEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
-		return bvec2(lhs.x != rhs.x, lhs.y != rhs.y);
+	inline vector2<bool> notEqual(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return vector2<bool>(lhs.x != rhs.x, lhs.y != rhs.y);
 	}
 
 	// true if ANY of v is true
-	inline bool any(const bvec2 &v) {
+	inline bool any(const vector2<bool> &v) {
 		return v.x || v.y;
 	}
 
 	// true if ANY of v is true
-	inline bool all(const bvec2 &v) {
+	inline bool all(const vector2<bool> &v) {
 		return v.x && v.y;
 	}
 
+	// component-wise logical complement of v
+	inline vector2<bool> operator !(const vector2<bool> &v) {
+		return vector2<bool>(!v.x, !v.y);
+	}
+
+
+	// Additional Vector Functions
+	//
+
+	// angle between 2 vectors
+	template <typename T1, typename T2>
+	inline auto angle(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return std::acos(dot(lhs, rhs) / (length(lhs) * length(rhs)));
+	}
+
+	// project lhs onto rhs
+	template <typename T1, typename T2>
+	inline auto project(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return rhs * (dot(lhs, rhs) / dot(rhs, rhs));
+	}
+
+	// project lhs onto the plane defined by the normal rhs
+	template <typename T1, typename T2>
+	inline auto reject(const vector2<T1> &lhs, const vector2<T2> &rhs) {
+		return lhs - project(lhs, rhs);
+	}
 
 
 
@@ -778,9 +1076,9 @@ namespace cgra {
 	template <typename T>
 	class vector3 {
 	public:
-		union{ T x; T r;};
-		union{ T y; T g;};
-		union{ T z; T b;};
+		union{ T x; T r; T s;};
+		union{ T y; T g; T t;};
+		union{ T z; T b; T p;};
 
 		// T constructors
 		vector3() : x(0), y(0), z(0) {}
@@ -797,11 +1095,16 @@ namespace cgra {
 		template <typename U>
 		vector3(T _x, const vector2<U> &v) : x(_x), y(v.x), z(v.y) {}
 
-		// vector2 down-cast consctructor
-		explicit operator vector2<T>() const {return vector2<T>(x, y);}
+		// vector2 down-cast converter
+		template <typename U>
+		explicit operator vector2<U>() const {return vector2<U>(x, y);}
 
-		static vector3 random(T lower = 0, T upper = 1) { 
-			return vector3(math::random<T>(lower, upper), math::random<T>(lower, upper), math::random<T>(lower, upper));
+		static vector3 random(T upper = 1) { 
+			return vector3(cgra::random<T>(T(0), upper), cgra::random<T>(T(0), upper), cgra::random<T>(T(0), upper));
+		}
+
+		static vector3 random(T lower, T upper) { 
+			return vector3(cgra::random<T>(lower, upper), cgra::random<T>(lower, upper), cgra::random<T>(lower, upper));
 		}
 
 		static vector3 i() {return vector3(1, 0, 0);}
@@ -814,15 +1117,11 @@ namespace cgra {
 			return v;
 		}
 
-		explicit operator T *() {
+		T * data() {
 			return &(x);
 		}
 
-		T * dataPointer() {
-			return &(x);
-		}
-
-		const T * dataPointer() const{
+		const T * data() const{
 			return &(x);
 		}
 
@@ -1192,7 +1491,13 @@ namespace cgra {
 		return vector3<common_t>(std::min<common_t>(lhs.x, rhs), std::min<common_t>(lhs.y, rhs), std::min<common_t>(lhs.z, rhs));
 	}
 
-	// minimum of vector components
+	// minimum of vector components (same type)
+	template <typename T>
+	inline auto min(const vector3<T> &lhs, const vector3<T> &rhs) {
+		return vector3<T>(std::min<T>(lhs.x, rhs.x), std::min<T>(lhs.y, rhs.y), std::min<T>(lhs.z, rhs.z));
+	}
+
+	// minimum of vector components (different types)
 	template <typename T1, typename T2>
 	inline auto min(const vector3<T1> &lhs, const vector3<T2> &rhs) {
 		using common_t = std::common_type_t<T1, T2>;
@@ -1206,7 +1511,13 @@ namespace cgra {
 		return vector3<common_t>(std::max<common_t>(lhs.x, rhs), std::max<common_t>(lhs.y, rhs), std::max<common_t>(lhs.z, rhs));
 	}
 
-	// maximum of vector components
+	// maximum of vector components (same type)
+	template <typename T>
+	inline auto max(const vector3<T> &lhs, const vector3<T> &rhs) {
+		return vector3<T>(std::max<T>(lhs.x, rhs.x), std::max<T>(lhs.y, rhs.y), std::max<T>(lhs.z, rhs.z));
+	}
+
+	// maximum of vector components (different types)
 	template <typename T1, typename T2>
 	inline auto max(const vector3<T1> &lhs, const vector3<T2> &rhs) {
 		using common_t = std::common_type_t<T1, T2>;
@@ -1271,14 +1582,14 @@ namespace cgra {
 
 	// boolean vector of component-wise isnan
 	template <typename T>
-	inline bvec3 isnan(const vector3<T> &v) {
-		return bvec3(isnan(v.x), isnan(v.y), isnan(v.z));
+	inline vector3<bool> isnan(const vector3<T> &v) {
+		return vector3<bool>(isnan(v.x), isnan(v.y), isnan(v.z));
 	}
 
 	// boolean vector of component-wise isinf
 	template <typename T>
-	inline bvec3 isinf(const vector3<T> &v) {
-		return bvec3(isinf(v.x), isinf(v.y), isinf(v.z));
+	inline vector3<bool> isinf(const vector3<T> &v) {
+		return vector3<bool>(isinf(v.x), isinf(v.y), isinf(v.z));
 	}
 
 
@@ -1346,48 +1657,75 @@ namespace cgra {
 
 	// component-wise compare of l<r
 	template <typename T1, typename T2>
-	inline bvec3 lessThan(const vector3<T1> &lhs, const vector3<T2> &rhs) {
-		return bvec3(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z);
+	inline vector3<bool> lessThan(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return vector3<bool>(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z);
 	}
 
 	// component-wise compare of l<=r
 	template <typename T1, typename T2>
-	inline bvec3 lessThanEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
-		return bvec3(lhs.x <= rhs.x, lhs.y <= rhs.y, lhs.z <= rhs.z);
+	inline vector3<bool> lessThanEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return vector3<bool>(lhs.x <= rhs.x, lhs.y <= rhs.y, lhs.z <= rhs.z);
 	}
 
 	// component-wise compare of l>r
 	template <typename T1, typename T2>
-	inline bvec3 greaterThan(const vector3<T1> &lhs, const vector3<T2> &rhs) {
-		return bvec3(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z);
+	inline vector3<bool> greaterThan(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return vector3<bool>(lhs.x > rhs.x, lhs.y > rhs.y, lhs.z > rhs.z);
 	}
 
 	// component-wise compare of l>=r
 	template <typename T1, typename T2>
-	inline bvec3 greaterThanEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
-		return bvec3(lhs.x >= rhs.x, lhs.y >= rhs.y, lhs.z >= rhs.z);
+	inline vector3<bool> greaterThanEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return vector3<bool>(lhs.x >= rhs.x, lhs.y >= rhs.y, lhs.z >= rhs.z);
 	}
 
 	// component-wise compare of l==r
 	template <typename T1, typename T2>
-	inline bvec3 equal(const vector3<T1> &lhs, const vector3<T2> &rhs) {
-		return bvec3(lhs.x == rhs.x, lhs.y == rhs.y, lhs.z == rhs.z);
+	inline vector3<bool> equal(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return vector3<bool>(lhs.x == rhs.x, lhs.y == rhs.y, lhs.z == rhs.z);
 	}
 
 	// component-wise compare of l!=r
 	template <typename T1, typename T2>
-	inline bvec3 notEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
-		return bvec3(lhs.x != rhs.x, lhs.y != rhs.y, lhs.z != rhs.z);
+	inline vector3<bool> notEqual(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return vector3<bool>(lhs.x != rhs.x, lhs.y != rhs.y, lhs.z != rhs.z);
 	}
 
 	// true if ANY of v is true
-	inline bool any(const bvec3 &v) {
+	inline bool any(const vector3<bool> &v) {
 		return v.x || v.y || v.z;
 	}
 
 	// true if ANY of v is true
-	inline bool all(const bvec3 &v) {
+	inline bool all(const vector3<bool> &v) {
 		return v.x && v.y && v.z;
+	}
+
+	// component-wise logical complement of v
+	inline vector3<bool> operator !(const vector3<bool> &v) {
+		return vector3<bool>(!v.x, !v.y, !v.z);
+	}
+
+
+	// Additional Vector Functions
+	//
+
+	// angle between 2 vectors
+	template <typename T1, typename T2>
+	inline auto angle(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return std::acos(dot(lhs, rhs) / (length(lhs) * length(rhs)));
+	}
+
+	// project lhs onto rhs
+	template <typename T1, typename T2>
+	inline auto project(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return rhs * (dot(lhs, rhs) / dot(rhs, rhs));
+	}
+
+	// project lhs onto the plane defined by the normal rhs
+	template <typename T1, typename T2>
+	inline auto reject(const vector3<T1> &lhs, const vector3<T2> &rhs) {
+		return lhs - project(lhs, rhs);
 	}
 
 
@@ -1407,10 +1745,10 @@ namespace cgra {
 	template <typename T>
 	class vector4 {
 	public:
-		union{ T x; T r;};
-		union{ T y; T g;};
-		union{ T z; T b;};
-		union{ T w; T a;};
+		union{ T x; T r; T s;};
+		union{ T y; T g; T t;};
+		union{ T z; T b; T p;};
+		union{ T w; T a; T q;};
 
 		// T constructors
 		vector4() : x(0), y(0), z(0), w(0) {}
@@ -1418,7 +1756,7 @@ namespace cgra {
 		vector4(T _x, T _y, T _z, T _w) : x(_x), y(_y), z(_z), w(_w) {}
 
 		template <typename U>
-		vector4(const vector2<U> &other) : x(other.x), y(other.y), z(other.z), w(other.w) {}
+		vector4(const vector4<U> &other) : x(other.x), y(other.y), z(other.z), w(other.w) {}
 
 		// vector2 constructors
 		template <typename U>
@@ -1436,13 +1774,20 @@ namespace cgra {
 		template <typename U>
 		vector4(T _x, const vector3<U> &v) : x(_x), y(v.x), z(v.y), w(v.z) {}
 
-		// vector2, vector3 down-cast constructors
-		explicit operator vector2<T>() const {return vector2<T>(x, y);}
-		explicit operator vector3<T>() const {return vector3<T>(x, y, z);}
+		// vector2, vector3 down-cast converter
+		template <typename U>
+		explicit operator vector2<U>() const {return vector2<U>(x, y);}
+		template <typename U>
+		explicit operator vector3<U>() const {return vector3<U>(x, y, z);}
 
-		static vector4 random(T lower = 0, T upper = 1) { 
-			return vector4(math::random<T>(lower, upper), math::random<T>(lower, upper),
-				math::random<T>(lower, upper), math::random<T>(lower, upper));
+		static vector4 random(T upper = 1) { 
+			return vector4(cgra::random<T>(T(0), upper), cgra::random<T>(T(0), upper),
+				cgra::random<T>(T(0), upper), cgra::random<T>(T(0), upper));
+		}
+
+		static vector4 random(T lower, T upper) { 
+			return vector4(cgra::random<T>(lower, upper), cgra::random<T>(lower, upper),
+				cgra::random<T>(lower, upper), cgra::random<T>(lower, upper));
 		}
 
 		static vector4 i() {return vector4(1, 0, 0, 0);}
@@ -1456,15 +1801,11 @@ namespace cgra {
 			return v;
 		}
 
-		explicit operator T *() {
+		T * data() {
 			return &(x);
 		}
 
-		T * dataPointer() {
-			return &(x);
-		}
-
-		const T * dataPointer() const{
+		const T * data() const{
 			return &(x);
 		}
 
@@ -1844,7 +2185,13 @@ namespace cgra {
 		return vector4<common_t>(std::min<common_t>(lhs.x, rhs), std::min<common_t>(lhs.y, rhs), std::min<common_t>(lhs.z, rhs), std::min<common_t>(lhs.w, rhs));
 	}
 
-	// minimum of vector components
+	// minimum of vector components (same type)
+	template <typename T>
+	inline auto min(const vector4<T> &lhs, const vector4<T> &rhs) {
+		return vector4<T>(std::min<T>(lhs.x, rhs.x), std::min<T>(lhs.y, rhs.y), std::min<T>(lhs.z, rhs.z), std::min<T>(lhs.w, rhs.w));
+	}
+
+	// minimum of vector components (different types)
 	template <typename T1, typename T2>
 	inline auto min(const vector4<T1> &lhs, const vector4<T2> &rhs) {
 		using common_t = std::common_type_t<T1, T2>;
@@ -1858,7 +2205,13 @@ namespace cgra {
 		return vector4<common_t>(std::max<common_t>(lhs.x, rhs), std::max<common_t>(lhs.y, rhs), std::max<common_t>(lhs.z, rhs), std::max<common_t>(lhs.w, rhs));
 	}
 
-	// maximum of vector components
+	// maximum of vector components (same type)
+	template <typename T>
+	inline auto max(const vector4<T> &lhs, const vector4<T> &rhs) {
+		return vector4<T>(std::max<T>(lhs.x, rhs.x), std::max<T>(lhs.y, rhs.y), std::max<T>(lhs.z, rhs.z), std::max<T>(lhs.w, rhs.w));
+	}
+
+	// maximum of vector components (different types)
 	template <typename T1, typename T2>
 	inline auto max(const vector4<T1> &lhs, const vector4<T2> &rhs) {
 		using common_t = std::common_type_t<T1, T2>;
@@ -1923,14 +2276,14 @@ namespace cgra {
 
 	// boolean vector of component-wise isnan
 	template <typename T>
-	inline bvec4 isnan(const vector4<T> &v) {
-		return bvec4(isnan(v.x), isnan(v.y), isnan(v.z), isnan(v.w));
+	inline vector4<bool> isnan(const vector4<T> &v) {
+		return vector4<bool>(isnan(v.x), isnan(v.y), isnan(v.z), isnan(v.w));
 	}
 
 	// boolean vector of component-wise isinf
 	template <typename T>
-	inline bvec4 isinf(const vector4<T> &v) {
-		return bvec4(isinf(v.x), isinf(v.y), isinf(v.z), isinf(v.w));
+	inline vector4<bool> isinf(const vector4<T> &v) {
+		return vector4<bool>(isinf(v.x), isinf(v.y), isinf(v.z), isinf(v.w));
 	}
 
 
@@ -1992,50 +2345,76 @@ namespace cgra {
 
 	// component-wise compare of l<r
 	template <typename T1, typename T2>
-	inline bvec4 lessThan(const vector4<T1> &lhs, const vector4<T2> &rhs) {
-		return bvec4(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z, lhs.w < rhs.w);
+	inline vector4<bool> lessThan(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return vector4<bool>(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z, lhs.w < rhs.w);
 	}
 
 	// component-wise compare of l<=r
 	template <typename T1, typename T2>
-	inline bvec4 lessThanEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
-		return bvec4(lhs.x <= rhs.x, lhs.y <= rhs.y, lhs.z <= rhs.z, lhs.w <= rhs.w);
+	inline vector4<bool> lessThanEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return vector4<bool>(lhs.x <= rhs.x, lhs.y <= rhs.y, lhs.z <= rhs.z, lhs.w <= rhs.w);
 	}
 
 	// component-wise compare of l>r
 	template <typename T1, typename T2>
-	inline bvec4 greaterThan(const vector4<T1> &lhs, const vector4<T2> &rhs) {
-		return bvec4(lhs.x < rhs.x, lhs.y < rhs.y, lhs.z < rhs.z, lhs.w < rhs.w);
+	inline vector4<bool> greaterThan(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return vector4<bool>(lhs.x > rhs.x, lhs.y > rhs.y, lhs.z > rhs.z, lhs.w > rhs.w);
 	}
 
 	// component-wise compare of l>=r
 	template <typename T1, typename T2>
-	inline bvec4 greaterThanEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
-		return bvec4(lhs.x >= rhs.x, lhs.y >= rhs.y, lhs.z >= rhs.z, lhs.w >= rhs.w);
+	inline vector4<bool> greaterThanEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return vector4<bool>(lhs.x >= rhs.x, lhs.y >= rhs.y, lhs.z >= rhs.z, lhs.w >= rhs.w);
 	}
 
 	// component-wise compare of l==r
 	template <typename T1, typename T2>
-	inline bvec4 equal(const vector4<T1> &lhs, const vector4<T2> &rhs) {
-		return bvec4(lhs.x == rhs.x, lhs.y == rhs.y, lhs.z == rhs.z, lhs.w == rhs.w);
+	inline vector4<bool> equal(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return vector4<bool>(lhs.x == rhs.x, lhs.y == rhs.y, lhs.z == rhs.z, lhs.w == rhs.w);
 	}
 
 	// component-wise compare of l!=r
 	template <typename T1, typename T2>
-	inline bvec4 notEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
-		return bvec4(lhs.x != rhs.x, lhs.y != rhs.y, lhs.z != rhs.z, lhs.w != rhs.w);
+	inline vector4<bool> notEqual(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return vector4<bool>(lhs.x != rhs.x, lhs.y != rhs.y, lhs.z != rhs.z, lhs.w != rhs.w);
 	}
 
 	// true if ANY of v is true
-	inline bool any(const bvec4 &v) {
+	inline bool any(const vector4<bool> &v) {
 		return v.x || v.y || v.z || v.w;
 	}
 
 	// true if ANY of v is true
-	inline bool all(const bvec4 &v) {
+	inline bool all(const vector4<bool> &v) {
 		return v.x && v.y && v.z && v.w;
 	}
 
+	// component-wise logical complement of v
+	inline vector4<bool> operator !(const vector4<bool> &v) {
+		return vector4<bool>(!v.x, !v.y, !v.z, !v.w);
+	}
+
+
+	// Additional Vector Functions
+	//
+
+	// angle between 2 vectors
+	template <typename T1, typename T2>
+	inline auto angle(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return std::acos(dot(lhs, rhs) / (length(lhs) * length(rhs)));
+	}
+
+	// project lhs onto rhs
+	template <typename T1, typename T2>
+	inline auto project(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return rhs * (dot(lhs, rhs) / dot(rhs, rhs));
+	}
+
+	// project lhs onto the plane defined by the normal rhs
+	template <typename T1, typename T2>
+	inline auto reject(const vector4<T1> &lhs, const vector4<T2> &rhs) {
+		return lhs - project(lhs, rhs);
+	}
 
 
 
@@ -2053,15 +2432,20 @@ namespace cgra {
 
 	template <typename T>
 	class matrix2 {
+
+		template <typename> friend class matrix2;
+
 	private:
-		vector2<T> data[2];
+		vector2<T> m_data[2];
 
 		void clear(T i=0) {
-			data[0] = vector2<T>(i, 0);
-			data[1] = vector2<T>(0, i);
+			m_data[0] = vector2<T>(i, 0);
+			m_data[1] = vector2<T>(0, i);
 		}
 
 	public:
+
+		// T constructors
 		matrix2() {
 			clear();
 		}
@@ -2070,52 +2454,53 @@ namespace cgra {
 			clear(i);
 		}
 
-		template <typename U1, typename U2>
-		matrix2(const vector2<U1> &a, const vector2<U2> &b) {
-			data[0] = a;
-			data[1] = b;
-		}
-
 		matrix2(
 			T e00, T e10, 
 			T e01, T e11
 		) {
-			data[0] = vector2<T>(e00, e10);
-			data[1] = vector2<T>(e01, e11);
+			m_data[0] = vector2<T>(e00, e10);
+			m_data[1] = vector2<T>(e01, e11);
 		}
 
 		template <typename U>
 		matrix2(const matrix2<U> &other) {
-			data[0] = other.data[0];
-			data[1] = other.data[1];
+			m_data[0] = other.m_data[0];
+			m_data[1] = other.m_data[1];
 		}
 
-		static matrix2 random(T lower = 0, T upper = 1) { 
+		// vector2 constructor
+		template <typename U1, typename U2>
+		matrix2(const vector2<U1> &a, const vector2<U2> &b) {
+			m_data[0] = a;
+			m_data[1] = b;
+		}
+
+		static matrix2 random(T upper = 1) { 
+			return matrix2(vector2<T>::random(upper), vector2<T>::random(upper));
+		}
+
+		static matrix2 random(T lower, T upper) { 
 			return matrix2(vector2<T>::random(lower, upper), vector2<T>::random(lower, upper));
 		}
 
 		static matrix2 identity() {return matrix2(1);}
 
-		explicit operator T *() {
-			return &(data[0].x);
+		T * data() {
+			return &(m_data[0].x);
 		}
 
-		T * dataPointer() {
-			return &(data[0].x);
-		}
-
-		const T * dataPointer() const{
-			return &(data[0].x);
+		const T * data() const{
+			return &(m_data[0].x);
 		}
 
 		const vector2<T> & operator[](size_t i) const {
 			assert(i < 2);
-			return data[i];
+			return m_data[i];
 		}
 
 		vector2<T> & operator[](size_t i) {
 			assert(i < 2);
-			return data[i];
+			return m_data[i];
 		}
 
 		// stream insertion
@@ -2134,38 +2519,38 @@ namespace cgra {
 		// assign
 		template <typename U>
 		matrix2 & operator=(const matrix2<U> &other) {
-			data[0] = other.data[0];
-			data[1] = other.data[1];
+			m_data[0] = other.m_data[0];
+			m_data[1] = other.m_data[1];
 			return *this;
 		}
 
 		// add-assign
 		template <typename U>
 		matrix2 & operator+=(const matrix2<U> &rhs) {
-			data[0] += rhs[0];
-			data[1] += rhs[1];
+			m_data[0] += rhs[0];
+			m_data[1] += rhs[1];
 			return *this;
 		}
 
 		// add-assign
 		matrix2 & operator+=(T rhs) {
-			data[0] += rhs;
-			data[1] += rhs;
+			m_data[0] += rhs;
+			m_data[1] += rhs;
 			return *this;
 		}
 
 		// subtract-assign
 		template <typename U>
 		matrix2 & operator-=(const matrix2<U> &rhs) {
-			data[0] -= rhs[0];
-			data[1] -= rhs[1];
+			m_data[0] -= rhs[0];
+			m_data[1] -= rhs[1];
 			return *this;
 		}
 
 		// subtract-assign
 		matrix2 & operator-=(T rhs) {
-			data[0] -= rhs;
-			data[1] -= rhs;
+			m_data[0] -= rhs;
+			m_data[1] -= rhs;
 			return *this;
 		}
 
@@ -2187,23 +2572,23 @@ namespace cgra {
 
 		// mulitply-assign
 		matrix2 & operator*=(T rhs) {
-			data[0] *= rhs;
-			data[1] *= rhs;
+			m_data[0] *= rhs;
+			m_data[1] *= rhs;
 			return *this;
 		}
 
 		// divide-assign
 		template <typename U>
 		matrix2 & operator/=(const matrix2<U> &rhs) {
-			data[0] /= rhs[0];
-			data[1] /= rhs[1];
+			m_data[0] /= rhs[0];
+			m_data[1] /= rhs[1];
 			return *this;
 		}
 
 		// divide-assign
 		matrix2 & operator/=(T rhs) {
-			data[0] /= rhs;
-			data[1] /= rhs;
+			m_data[0] /= rhs;
+			m_data[1] /= rhs;
 			return *this;
 		}
 
@@ -2406,16 +2791,22 @@ namespace cgra {
 
 	template <typename T>
 	class matrix3 {
+
+		template <typename> friend class matrix2;
+		template <typename> friend class matrix3;
+
 	private:
-		vector3<T> data[3];
+		vector3<T> m_data[3];
 
 		void clear(T i=0) {
-			data[0] = vector3<T>(i, 0, 0);
-			data[1] = vector3<T>(0, i, 0);
-			data[2] = vector3<T>(0, 0, i);
+			m_data[0] = vector3<T>(i, 0, 0);
+			m_data[1] = vector3<T>(0, i, 0);
+			m_data[2] = vector3<T>(0, 0, i);
 		}
 
 	public:
+
+		// T constructors
 		matrix3() {
 			clear();
 		}
@@ -2424,56 +2815,71 @@ namespace cgra {
 			clear(i);
 		}
 
-		template <typename U1, typename U2, typename U3>
-		matrix3(const vector3<U1> &a, const vector3<U2> &b, const vector3<U3> &c) {
-			data[0] = a;
-			data[1] = b;
-			data[2] = c;
-		}
-
 		matrix3(
 			T e00, T e10, T e20,
 			T e01, T e11, T e21,
 			T e02, T e12, T e22
 		) {
-			data[0] = vector3<T>(e00, e10, e20);
-			data[1] = vector3<T>(e01, e11, e21);
-			data[2] = vector3<T>(e02, e12, e22);
+			m_data[0] = vector3<T>(e00, e10, e20);
+			m_data[1] = vector3<T>(e01, e11, e21);
+			m_data[2] = vector3<T>(e02, e12, e22);
 		}
 
 		template <typename U>
 		matrix3(const matrix3<U> &other) {
-			data[0] = other.data[0];
-			data[1] = other.data[1];
-			data[2] = other.data[2];
+			m_data[0] = other.m_data[0];
+			m_data[1] = other.m_data[1];
+			m_data[2] = other.m_data[2];
 		}
 
-		static matrix3 random(T lower = 0, T upper = 1) { 
+		// vector3 constructor
+		template <typename U1, typename U2, typename U3>
+		matrix3(const vector3<U1> &a, const vector3<U2> &b, const vector3<U3> &c) {
+			m_data[0] = a;
+			m_data[1] = b;
+			m_data[2] = c;
+		}
+
+		// matrix2 constructor
+		template <typename U>
+		matrix3(const matrix2<U> &other) {
+			m_data[0] = vector3<T>(other.m_data[0], 0);
+			m_data[1] = vector3<T>(other.m_data[1], 0);
+			m_data[2] = vector3<T>(0, 0, 1);
+		}
+
+		// matrix2 down-cast converter
+		template <typename U>
+		explicit operator matrix2<U>() const {
+			return matrix2<U>(vector2<U>(m_data[0]), vector2<U>(m_data[1]));
+		}
+
+		static matrix3 random(T upper = 1) { 
+			return matrix3(vector3<T>::random(upper), vector3<T>::random(upper), vector3<T>::random(upper));
+		}
+
+		static matrix3 random(T lower, T upper) { 
 			return matrix3(vector3<T>::random(lower, upper), vector3<T>::random(lower, upper), vector3<T>::random(lower, upper));
 		}
 
 		static matrix3 identity() {return matrix3(1);}
 
-		explicit operator T *() {
-			return &(data[0].x);
+		T * data() {
+			return &(m_data[0].x);
 		}
 
-		T * dataPointer() {
-			return &(data[0].x);
-		}
-
-		const T * dataPointer() const{
-			return &(data[0].x);
+		const T * data() const{
+			return &(m_data[0].x);
 		}
 
 		const vector3<T> & operator[](size_t i) const {
 			assert(i < 3);
-			return data[i];
+			return m_data[i];
 		}
 
 		vector3<T> & operator[](size_t i) {
 			assert(i < 3);
-			return data[i];
+			return m_data[i];
 		}
 
 		// stream insertion
@@ -2503,43 +2909,43 @@ namespace cgra {
 		// assign
 		template <typename U>
 		matrix3 & operator=(const matrix3<U> &other) {
-			data[0] = other.data[0];
-			data[1] = other.data[1];
-			data[2] = other.data[2];
+			m_data[0] = other.m_data[0];
+			m_data[1] = other.m_data[1];
+			m_data[2] = other.m_data[2];
 			return *this;
 		}
 
 		// add-assign
 		template <typename U>
 		matrix3 & operator+=(const matrix3<U> &rhs) {
-			data[0] += rhs[0];
-			data[1] += rhs[1];
-			data[2] += rhs[2];
+			m_data[0] += rhs[0];
+			m_data[1] += rhs[1];
+			m_data[2] += rhs[2];
 			return *this;
 		}
 
 		// add-assign
 		matrix3 & operator+=(T rhs) {
-			data[0] += rhs;
-			data[1] += rhs;
-			data[2] += rhs;
+			m_data[0] += rhs;
+			m_data[1] += rhs;
+			m_data[2] += rhs;
 			return *this;
 		}
 
 		// subtract-assign
 		template <typename U>
 		matrix3 & operator-=(const matrix3<U> &rhs) {
-			data[0] -= rhs[0];
-			data[1] -= rhs[1];
-			data[2] -= rhs[2];
+			m_data[0] -= rhs[0];
+			m_data[1] -= rhs[1];
+			m_data[2] -= rhs[2];
 			return *this;
 		}
 
 		// subtract-assign
 		matrix3 & operator-=(T rhs) {
-			data[0] -= rhs;
-			data[1] -= rhs;
-			data[2] -= rhs;
+			m_data[0] -= rhs;
+			m_data[1] -= rhs;
+			m_data[2] -= rhs;
 			return *this;
 		}
 
@@ -2561,26 +2967,26 @@ namespace cgra {
 
 		// mulitply-assign
 		matrix3 & operator*=(T rhs) {
-			data[0] *= rhs;
-			data[1] *= rhs;
-			data[2] *= rhs;
+			m_data[0] *= rhs;
+			m_data[1] *= rhs;
+			m_data[2] *= rhs;
 			return *this;
 		}
 
 		// divide-assign
 		template <typename U>
 		matrix3 & operator/=(const matrix3<U> &rhs) {
-			data[0] /= rhs[0];
-			data[1] /= rhs[1];
-			data[2] /= rhs[2];
+			m_data[0] /= rhs[0];
+			m_data[1] /= rhs[1];
+			m_data[2] /= rhs[2];
 			return *this;
 		}
 
 		// divide-assign
 		matrix3 & operator/=(T rhs) {
-			data[0] /= rhs;
-			data[1] /= rhs;
-			data[2] /= rhs;
+			m_data[0] /= rhs;
+			m_data[1] /= rhs;
+			m_data[2] /= rhs;
 			return *this;
 		}
 
@@ -2809,17 +3215,24 @@ namespace cgra {
 
 	template <typename T>
 	class matrix4 {
+
+		template <typename> friend class matrix2;
+		template <typename> friend class matrix3;
+		template <typename> friend class matrix4;
+
 	private:
-		vector4<T> data[4];
+		vector4<T> m_data[4];
 
 		void clear(T i=0) {
-			data[0] = vector4<T>(i, 0, 0, 0);
-			data[1] = vector4<T>(0, i, 0, 0);
-			data[2] = vector4<T>(0, 0, i, 0);
-			data[3] = vector4<T>(0, 0, 0, i);
+			m_data[0] = vector4<T>(i, 0, 0, 0);
+			m_data[1] = vector4<T>(0, i, 0, 0);
+			m_data[2] = vector4<T>(0, 0, i, 0);
+			m_data[3] = vector4<T>(0, 0, 0, i);
 		}
 
 	public:
+
+		// T constructor
 		matrix4() {
 			clear();
 		}
@@ -2828,35 +3241,71 @@ namespace cgra {
 			clear(i);
 		}
 
-		template <typename U1, typename U2, typename U3, typename U4>
-		matrix4(const vector4<U1> &a, const vector4<U2> &b, const vector4<U3> &c, const vector4<U4> &d) {
-			data[0] = a;
-			data[1] = b;
-			data[2] = c;
-			data[3] = d;
-		}
-
 		matrix4(
 			T e00, T e10, T e20, T e30, 
 			T e01, T e11, T e21, T e31, 
 			T e02, T e12, T e22, T e32, 
 			T e03, T e13, T e23, T e33
 		) {
-			data[0] = vector4<T>(e00, e10, e20, e30);
-			data[1] = vector4<T>(e01, e11, e21, e31);
-			data[2] = vector4<T>(e02, e12, e22, e32);
-			data[3] = vector4<T>(e03, e13, e23, e33);
+			m_data[0] = vector4<T>(e00, e10, e20, e30);
+			m_data[1] = vector4<T>(e01, e11, e21, e31);
+			m_data[2] = vector4<T>(e02, e12, e22, e32);
+			m_data[3] = vector4<T>(e03, e13, e23, e33);
 		}
 
 		template <typename U>
 		matrix4(const matrix4<U> &other) {
-			data[0] = other.data[0];
-			data[1] = other.data[1];
-			data[2] = other.data[2];
-			data[3] = other.data[3];
+			m_data[0] = other.m_data[0];
+			m_data[1] = other.m_data[1];
+			m_data[2] = other.m_data[2];
+			m_data[3] = other.m_data[3];
 		}
 
-		static matrix4 random(T lower = 0, T upper = 1) { 
+		// vector4 constructor
+		template <typename U1, typename U2, typename U3, typename U4>
+		matrix4(const vector4<U1> &a, const vector4<U2> &b, const vector4<U3> &c, const vector4<U4> &d) {
+			m_data[0] = a;
+			m_data[1] = b;
+			m_data[2] = c;
+			m_data[3] = d;
+		}
+
+		// matrix2 constructor
+		template <typename U>
+		matrix4(const matrix2<U> &other) {
+			m_data[0] = vector4<T>(other.m_data[0], 0, 0);
+			m_data[1] = vector4<T>(other.m_data[1], 0, 0);
+			m_data[2] = vector4<T>(0, 0, 1, 0);
+			m_data[3] = vector4<T>(0, 0, 0, 1);
+		}
+
+		// matrix3 constructor
+		template <typename U>
+		matrix4(const matrix3<U> &other) {
+			m_data[0] = vector4<T>(other.m_data[0], 0);
+			m_data[1] = vector4<T>(other.m_data[1], 0);
+			m_data[2] = vector4<T>(other.m_data[2], 0);
+			m_data[3] = vector4<T>(0, 0, 0, 1);
+		}
+
+		// matrix2 down-cast converter
+		template <typename U>
+		explicit operator matrix2<U>() const {
+			return matrix2<U>(vector2<U>(m_data[0]), vector2<U>(m_data[1]));
+		}
+
+		// matrix3 down-cast converter
+		template <typename U>
+		explicit operator matrix3<U>() const {
+			return matrix3<U>(vector3<U>(m_data[0]), vector3<U>(m_data[1]), vector3<U>(m_data[2]));
+		}
+
+		static matrix4 random(T upper = 1) { 
+			return matrix4(vector4<T>::random(upper), vector4<T>::random(upper),
+				vector4<T>::random(upper), vector4<T>::random(upper));
+		}
+
+		static matrix4 random(T lower, T upper) { 
 			return matrix4(vector4<T>::random(lower, upper), vector4<T>::random(lower, upper),
 				vector4<T>::random(lower, upper), vector4<T>::random(lower, upper));
 		}
@@ -2941,7 +3390,7 @@ namespace cgra {
 			return matrix4::scale(f, f, f);
 		}
 
-		static matrix4 rotateX(T angle) {
+		static matrix4 rotate_x(T angle) {
 			matrix4 m(1);
 			m[1][1] = std::cos(angle);
 			m[2][1] = -std::sin(angle);
@@ -2950,7 +3399,7 @@ namespace cgra {
 			return m;
 		}
 		
-		static matrix4 rotateY(T angle) {
+		static matrix4 rotate_y(T angle) {
 			matrix4 m(1);
 			m[0][0] = std::cos(angle);
 			m[2][0] = std::sin(angle);
@@ -2959,7 +3408,7 @@ namespace cgra {
 			return m;
 		}
 		
-		static matrix4 rotateZ(T angle) {
+		static matrix4 rotate_z(T angle) {
 			matrix4 m(1);
 			m[0][0] = std::cos(angle);
 			m[1][0] = -std::sin(angle);
@@ -2968,26 +3417,22 @@ namespace cgra {
 			return m;
 		}
 
-		explicit operator T *() {
-			return &(data[0].x);
+		T * data() {
+			return &(m_data[0].x);
 		}
 
-		T * dataPointer() {
-			return &(data[0].x);
-		}
-
-		const T * dataPointer() const{
-			return &(data[0].x);
+		const T * data() const{
+			return &(m_data[0].x);
 		}
 
 		const vector4<T> & operator[](size_t i) const {
 			assert(i < 4);
-			return data[i];
+			return m_data[i];
 		}
 
 		vector4<T> & operator[](size_t i) {
 			assert(i < 4);
-			return data[i];
+			return m_data[i];
 		}
 
 		// stream insertion
@@ -3027,48 +3472,48 @@ namespace cgra {
 		// assign
 		template <typename U>
 		matrix4 & operator=(const matrix4<U> &other) {
-			data[0] = other.data[0];
-			data[1] = other.data[1];
-			data[2] = other.data[2];
-			data[3] = other.data[3];
+			m_data[0] = other.m_data[0];
+			m_data[1] = other.m_data[1];
+			m_data[2] = other.m_data[2];
+			m_data[3] = other.m_data[3];
 			return *this;
 		}
 
 		// add-assign
 		template <typename U>
 		matrix4 & operator+=(const matrix4<U> &rhs) {
-			data[0] += rhs[0];
-			data[1] += rhs[1];
-			data[2] += rhs[2];
-			data[3] += rhs[3];
+			m_data[0] += rhs[0];
+			m_data[1] += rhs[1];
+			m_data[2] += rhs[2];
+			m_data[3] += rhs[3];
 			return *this;
 		}
 
 		// add-assign
 		matrix4 & operator+=(T rhs) {
-			data[0] += rhs;
-			data[1] += rhs;
-			data[2] += rhs;
-			data[3] += rhs;
+			m_data[0] += rhs;
+			m_data[1] += rhs;
+			m_data[2] += rhs;
+			m_data[3] += rhs;
 			return *this;
 		}
 
 		// subtract-assign
 		template <typename U>
 		matrix4 & operator-=(const matrix4<U> &rhs) {
-			data[0] -= rhs[0];
-			data[1] -= rhs[1];
-			data[2] -= rhs[2];
-			data[3] -= rhs[3];
+			m_data[0] -= rhs[0];
+			m_data[1] -= rhs[1];
+			m_data[2] -= rhs[2];
+			m_data[3] -= rhs[3];
 			return *this;
 		}
 
 		// subtract-assign
 		matrix4 & operator-=(T rhs) {
-			data[0] -= rhs;
-			data[1] -= rhs;
-			data[2] -= rhs;
-			data[3] -= rhs;
+			m_data[0] -= rhs;
+			m_data[1] -= rhs;
+			m_data[2] -= rhs;
+			m_data[3] -= rhs;
 			return *this;
 		}
 
@@ -3090,29 +3535,29 @@ namespace cgra {
 
 		// mulitply-assign
 		matrix4 & operator*=(T rhs) {
-			data[0] *= rhs;
-			data[1] *= rhs;
-			data[2] *= rhs;
-			data[3] *= rhs;
+			m_data[0] *= rhs;
+			m_data[1] *= rhs;
+			m_data[2] *= rhs;
+			m_data[3] *= rhs;
 			return *this;
 		}
 
 		// divide-assign
 		template <typename U>
 		matrix4 & operator/=(const matrix4<U> &rhs) {
-			data[0] /= rhs[0];
-			data[1] /= rhs[1];
-			data[2] /= rhs[2];
-			data[3] /= rhs[3];
+			m_data[0] /= rhs[0];
+			m_data[1] /= rhs[1];
+			m_data[2] /= rhs[2];
+			m_data[3] /= rhs[3];
 			return *this;
 		}
 
 		// divide-assign
 		matrix4 & operator/=(T rhs) {
-			data[0] /= rhs;
-			data[1] /= rhs;
-			data[2] /= rhs;
-			data[3] /= rhs;
+			m_data[0] /= rhs;
+			m_data[1] /= rhs;
+			m_data[2] /= rhs;
+			m_data[3] /= rhs;
 			return *this;
 		}
 
@@ -3334,5 +3779,437 @@ namespace cgra {
 		m[3] = lhs * rhs[3];
 		return m;
 	}
+
+
+
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////   ____              _                  _                                                                         ////
+	////  / __ \            | |                (_)                                                                      ////
+	//// | |  | |_   _  __ _| |_ ___ _ __ _ __  _  ___  _ __                                                          ////
+	//// | |  | | | | |/ _` | __/ _ \ '__| '_ \| |/ _ \| '_ \                                                       ////
+	//// | |__| | |_| | (_| | ||  __/ |  | | | | | (_) | | | |                                                        ////
+	////  \___\_\\__,_|\__,_|\__\___|_|  |_| |_|_|\___/|_| |_|                                                          ////
+	////                                                                                                                  ////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
+
+	template <typename T>
+	class quaternion {
+	public:
+		T w, x, y, z;
+
+		quaternion() : w(1), x(0), y(0), z(0) { }
+
+		quaternion(T _w, T _x, T _y, T _z) :  w(_w), x(_x), y(_y), z(_z) { }
+
+		template <typename U>
+		quaternion(const quaternion<U>& q) : w(q.w), x(q.x), y(q.y), z(q.z) { }
+
+		template <typename U>
+		quaternion(T _w, const vector3<U> &v) : w(_w), x(v.x), y(v.y), z(v.z) { }
+
+		template <typename U>
+		quaternion(const vector4<U> &v) : w(v.w), x(v.x), y(v.y), z(v.z) { }
+
+		// vector3 converter
+		template <typename U>
+		explicit operator vector3<U>() const {
+			return vector3<U>(x, y, z);
+		}
+
+		// vector4 converter
+		template <typename U>
+		explicit operator vector4<U>() const {
+			return vector4<U>(x, y, z, w);
+		}
+
+		// matrix3 converter
+		template <typename U>
+		explicit operator matrix3<U>() const {
+			matrix3<U> m;
+
+			m[0][0] = w * w + x * x - y * y - z * z;
+			m[0][1] = 2 * x * y + 2 * w * z;
+			m[0][2] = 2 * x * z - 2 * w * y;
+
+			m[1][0] = 2 * x * y - 2 * w * z;
+			m[1][1] = w * w - x * x + y * y - z * z;
+			m[1][2] = 2 * y * z + 2 * w * x;
+
+			m[2][0] = 2 * x * z + 2 * w * y;
+			m[2][1] = 2 * y * z - 2 * w * x;
+			m[2][2] = w * w - x * x - y * y + z * z;
+
+			return m;
+		}
+
+		// matrix3 converter
+		template <typename U>
+		explicit operator matrix4<U>() const {
+			matrix4<U> m;
+
+			m[0][0] = w * w + x * x - y * y - z * z;
+			m[0][1] = 2 * x * y + 2 * w * z;
+			m[0][2] = 2 * x * z - 2 * w * y;
+			m[0][3] = 0;
+
+			m[1][0] = 2 * x * y - 2 * w * z;
+			m[1][1] = w * w - x * x + y * y - z * z;
+			m[1][2] = 2 * y * z + 2 * w * x;
+			m[1][3] = 0;
+
+			m[2][0] = 2 * x * z + 2 * w * y;
+			m[2][1] = 2 * y * z - 2 * w * x;
+			m[2][2] = w * w - x * x - y * y + z * z;
+			m[2][3] = 0;
+
+			m[3][0] = 0;
+			m[3][1] = 0;
+			m[3][2] = 0;
+			m[3][3] = w * w + x * x + y * y + z * z;
+
+			return m;
+		}
+
+
+		static quaternion random(T lower = 0, T upper = 1) { 
+			return quaternion(); //TODO fix
+		}
+
+		// Euler angle constuctor
+		// TODO implement alternitives to body-3-2-1 euler rotation
+		static quaternion euler(T rx, T ry, T rz) {
+		
+			vector4<T> rotx(sin(rx/2), 0, 0, cos(rx/2));
+			vector4<T> roty(0, sin(ry/2), 0, cos(ry/2));
+			vector4<T> rotz(0, 0, sin(rz/2), cos(rz/2));
+
+			quaternion q(rotx * outerProduct(roty, rotz));
+
+			return q;
+		}
+
+		// rotation around a given axis
+		template <typename U>
+		static quaternion axisangle(const vector3<U>& axis, T angle) {
+			quaternion q;
+			vector3<T> a = normalize(axis);
+
+			q.w = std::cos(angle/2);
+			T s = std::sin(angle/2);
+			q.x = s * a.x;
+			q.y = s * a.y;
+			q.z = s * a.z;
+
+			return q;
+		}
+
+		// rotation around a given axis using axis's magnitude as angle
+		template <typename U>
+		static quaternion axisangle(const vector3<U>& axis) {
+			quaternion q;
+			T angle = length(axis);
+
+			if (angle > T(0)) {
+				vector3<T> a = axis/angle;
+				q.w = std::cos(angle/2);
+				T s = std::sin(angle/2);
+				q.x = s * a.x;
+				q.y = s * a.y;
+				q.z = s * a.z;
+			}
+
+			return q;
+		}
+
+		// rotation between 2 vectors
+		template <typename U1, typename U2>
+		static quaternion fromto(const vector3<U1> &from, const vector3<U2> &to) {
+			quaternion q;
+
+			q.w = dot(normalize(from), normalize(to));
+			T s = std::sin(std::acos(q.w)/2);
+			vector3<T> c = normalize(cross(from, to));
+			q.x = s * c.x;
+			q.y = s * c.y;
+			q.z = s * c.z;
+
+			return q;
+		}
+
+		static quaternion checknan(const quaternion &v) {
+			T sum = v.w + v.x + v.y + v.z;
+			assert(sum == sum);
+			return v;
+		}
+
+		T * data() {
+			return &(w);
+		}
+
+		const T * data() const{
+			return &(w);
+		}
+
+		const T & operator[](size_t i) const {
+			assert(i < 4);
+			return *(&w + i);
+		}
+
+		T & operator[](size_t i) {
+			assert(i < 4);
+			return *(&w + i);
+		}
+
+		// stream insertion
+		inline friend std::ostream & operator<<(std::ostream &out, const quaternion &q) {
+			return out << '(' << q.w << ", " << q.x << ", " << q.y << ", " << q.z << ')';
+		}
+
+		// add-assign
+		inline quaternion & operator+=(const quaternion &rhs) {
+			w += rhs.w;
+			x += rhs.x;
+			y += rhs.y;
+			z += rhs.z;
+			return *this;
+		}
+
+		// subtract-assign
+		inline quaternion & operator-=(const quaternion &rhs) {
+			w -= rhs.w;
+			x -= rhs.x;
+			y -= rhs.y;
+			z -= rhs.z;
+			return *this;
+		}
+
+		// mulitply-assign
+		inline quaternion & operator*=(const quaternion &rhs) {
+			T _w = w * rhs.w - x * rhs.x - y * rhs.y - z * rhs.z;
+			T _x = w * rhs.x + x * rhs.w + y * rhs.z - z * rhs.y;
+			T _y = w * rhs.y - x * rhs.z + y * rhs.w + z * rhs.x;
+			T _z = w * rhs.z + x * rhs.y - y * rhs.x + z * rhs.w;
+			w = _w; x = _x; y = _y; z = _z;
+			return *this;
+		}
+
+		// mulitply-assign
+		inline quaternion & operator*=(T rhs) {
+			w *= rhs;
+			x *= rhs;
+			y *= rhs;
+			z *= rhs;
+			return *this;
+		}
+
+		// divide-assign
+		inline quaternion & operator/=(T rhs) {
+			w /= rhs;
+			x /= rhs;
+			y /= rhs;
+			z /= rhs;
+			quaternion::checknan(*this);
+			return *this;
+		}
+	};
+
+
+	// Functions needed for operator overloads
+	//
+
+	// dot product
+	template <typename T1, typename T2>
+	inline auto dot(const quaternion<T1> &lhs, const quaternion<T2> &rhs) {
+		return lhs.w * rhs.w + lhs.x * rhs.x +  lhs.y * rhs.y + lhs.z * rhs.z;
+	}
+
+	// inverse rotation
+	template <typename T>
+	inline auto conjugate(const quaternion<T>& q) {
+		return quaternion<T>(q.w, -q.x, -q.y, -q.z);
+	}
+
+	// multiplicative inverse
+	template <typename T>
+	inline auto inverse(const quaternion<T>& q) {
+		T ilen2 = 1/dot(q, q);
+		return conjugate(q) * ilen2;
+	}
+
+
+	// Operator Overloads
+	//
+
+	// negate
+	template <typename T>
+	inline auto operator-(const quaternion<T> &q) {
+		return conjugate(q);
+	}
+
+	// add quaternion
+	template <typename T1, typename T2>
+	inline auto operator+(const quaternion<T1> &lhs, const quaternion<T2> &rhs) {
+		quaternion<std::common_type_t<T1, T2>> q = lhs;
+		return q += rhs;
+	}
+
+	// subtract quaternion
+	template <typename T1, typename T2>
+	inline auto operator-(const quaternion<T1> &lhs, const quaternion<T2> &rhs) {
+		quaternion<std::common_type_t<T1, T2>> q = lhs;
+		return q -= rhs;
+	}
+
+	// multiply quaternion
+	template <typename T1, typename T2>
+	inline auto operator*(const quaternion<T1> &lhs, const quaternion<T2> &rhs) {
+		quaternion<std::common_type_t<T1, T2>> q = lhs;
+		return q *= rhs;
+	}
+
+	// multiply vector (rotate)
+	template <typename T1, typename T2>
+	inline auto operator*(const quaternion<T1> &lhs, const vector3<T2> &rhs) {
+		using common_t = std::common_type_t<T1, T2>;
+		quaternion<common_t> q = lhs;
+		quaternion<common_t> p(0, rhs);
+		return vector3<common_t>(q * p * inverse(q));
+	}
+
+	// multiply scaler
+	template <typename T1, typename T2>
+	inline auto operator*(const quaternion<T1> &lhs, T2 rhs) {
+		quaternion<std::common_type_t<T1, T2>> q = lhs;
+		return q *= rhs;
+	}
+
+	// multiply scaler
+	template <typename T1, typename T2>
+	inline auto operator*(T1 lhs, const quaternion<T2> &rhs) {
+		quaternion<std::common_type_t<T1, T2>> q = rhs;
+		return q *= lhs;
+	}
+
+	// divide scaler
+	template <typename T1, typename T2>
+	inline auto operator/(const quaternion<T1> &lhs, T2 rhs) {
+		quaternion<std::common_type_t<T1, T2>> q = lhs;
+		return q /= rhs;
+	}
+
+
+	// Additional functions
+	//
+
+	template <typename T>
+	inline auto exp(const quaternion<T> &q) {
+		T expw = std::exp(q.w);
+		T vm = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z);
+		T ivm = 1 / vm;
+
+		if (isinf(ivm)) return quaternion<T>(expw * std::cos(vm), 0, 0, 0);
+
+		T vf = expw * std::sin(vm) * ivm;
+		return quaternion<T>(expw * std::cos(vm), q.x * vf, q.y * vf, q.z * vf);
+	}
+	
+	template <typename T>
+	inline auto log(const quaternion<T> &q) {
+		T qm = length(q);
+		T ivm = 1 / std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z);
+
+		if (isinf(ivm)) return quaternion<T>(std::log(qm), 0, 0, 0);
+
+		T vf = std::acos(q.w / qm) * ivm;
+		return quaternion<T>(std::log(qm), q.x * vf, q.y * vf, q.z * vf);
+	}
+	
+	template <typename T>
+	inline auto pow(const quaternion<T> &q, T power) {
+		T qm = length(q);
+		T theta = std::acos(q.w / qm);
+		T ivm = 1 / std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z);
+		
+		if (isinf(ivm)) return quaternion<T>() * std::pow(qm, power);
+
+		T ivm_power_theta = ivm * power * theta;
+		quaternion<T> p(0, q.x * ivm_power_theta, q.y * ivm_power_theta, q.z * ivm_power_theta);
+		return exp(p) * std::pow(qm, power);
+	}
+
+
+	// length/magnitude of vector
+	template <typename T>
+	inline T length(const quaternion<T> &q) {
+		return std::sqrt(dot(q, q));
+	}
+
+	// returns unit quaternion
+	template <typename T>
+	inline auto normalize(const quaternion<T> &q) {
+		return q / length(q);
+	}
+
+	// normalized linear interpolation
+	// linear blend of quaternions : x*(1-a) + y*a
+	template <typename T1, typename T2, typename T3>
+	inline auto mix(const quaternion<T1> &lhs, const quaternion<T2> &rhs, T3 a) {
+		using common_t = std::common_type_t<T1, T2, T3>;
+		return lhs*(common_t(1)-a)+rhs*a;
+	}
+
+	// spherical linear interpolation
+	template <typename T1, typename T2, typename T3>
+	inline auto slerp(const quaternion<T1>& lhs, const quaternion<T2>& rhs, T3 a) {
+		using common_t = std::common_type_t<T1, T2, T3>;
+		quaternion<common_t> q = normalize(lhs);
+		quaternion<common_t> p = normalize(rhs);
+		common_t epsilon = 0.0001;
+		if (dot(p, q) < common_t(0)) {
+			q = q * common_t(-1);
+		}
+		common_t dpq = dot(p, q);
+
+		if ((common_t(1) - dpq) > epsilon) {
+			common_t w = std::acos(dpq);
+			return ((std::sin((common_t(1) - a) * w) * p) + (std::sin(a * w) * q)) / std::sin(w);
+		}
+		
+		return (common_t(1) - a) * p + a * q;
+	}
+
+
+	// TODO implement alternitives to body-3-2-1 euler rotation
+	// http://www.geometrictools.com/Documentation/EulerAngles.pdf
+	template <typename T>
+	inline vector3<T> euler(const quaternion<T> &q) {
+		// TODO
+		return vector3<T>();
+	}
+
+	// rotation around a given axis
+	template <typename T1, typename T2>
+	inline auto project(const quaternion<T1> &q, const vector3<T2> &v) {
+		using common_t = std::common_type_t<T1, T2>;
+		
+		vector3<common_t> nv = normalize(v);
+
+		// find the the tangent to nv
+		vector3<common_t> tangent = vector3<common_t>::i();
+		common_t epsilon = 0.0001;
+		if (dot(tangent, nv) > common_t(1)-epsilon) 
+			tangent = vector3<common_t>::j();
+		tangent = normalize(cross(nv, tangent));
+
+		// transform, reject and dot values to get angle
+		vector3<common_t> transformed = q * tangent;
+		vector3<common_t> projection = normalize(reject(transformed, nv));
+
+		return angle(tangent, projection);
+	}
+
 
 }
