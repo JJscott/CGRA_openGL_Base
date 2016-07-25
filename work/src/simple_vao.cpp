@@ -142,10 +142,10 @@ namespace cgra {
 	}
 
 	void SimpleVAO::add_vertex(GLfloat *v) {
-		glVertex3f(v[0], v[1], v[2]);
+		add_vertex(v[0], v[1], v[2]);
 	}
 
 	void SimpleVAO::add_vertex(vec3 v) {
-		glVertex3f(v.x, v.y, v.z);
+		add_vertex(v.x, v.y, v.z);
 	}
 }
