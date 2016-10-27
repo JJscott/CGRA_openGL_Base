@@ -7,10 +7,11 @@
 
 #include "cgra_math.hpp"
 #include "opengl.hpp"
-#include "simple_gui.hpp"
-#include "simple_image.hpp"
-#include "simple_shader.hpp"
-#include "simple_vao.hpp"
+
+#include "simple/simple_gui.hpp"
+#include "simple/simple_image.hpp"
+#include "simple/simple_shader.hpp"
+#include "simple/simple_vao.hpp"
 
 using namespace std;
 using namespace cgra;

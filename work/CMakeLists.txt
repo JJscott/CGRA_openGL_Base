@@ -6,7 +6,7 @@
 # require new behaviour of: CMP0054
 cmake_minimum_required(VERSION 3.1)
 
-# Assignment Name
+# Project Name
 set(CGRA_PROJECT "base" CACHE STRING "CGRA Project Name")
 
 # Project
@@ -15,44 +15,40 @@ project("CGRA_PROJECT_${CGRA_PROJECT}" CXX C)
 # Enable IDE Project Folders
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+
 #########################################################
 # Force Output Directories
 # In general, this isn't a very friendly thing to do, but
 # we'll do it anyway so the exes are in a reliable place.
 #########################################################
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+
 #########################################################
 # Find OpenGL
 #########################################################
+
 find_package(OpenGL REQUIRED)
 
+
 #########################################################
-# Include GLFW Subproject
+# Include Subprojects
 #########################################################
+
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/glfw")
 include_directories("${PROJECT_SOURCE_DIR}/ext/glfw/include")
-
-#########################################################
-# Include GLEW Subproject
-#########################################################
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/glew-1.10.0")
-
-#########################################################
-# Include STB Subproject
-#########################################################
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/stb")
-
-#########################################################
-# Include IMGUI Subproject
-#########################################################
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/imgui")
+
 
 #########################################################
 # Set Compiler Flags
 #########################################################
+
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	# Full normal warnings
 	add_compile_options(/W4)
@@ -79,9 +75,39 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 	add_compile_options(-Werror=return-type)
 endif()
 
+
+#########################################################
+# Helper methods
+#########################################################
+
+# Set source groups to mirror real directory tree
+function(target_source_group_tree target)
+	get_target_property(sources ${target} SOURCES)
+	foreach(source ${sources})
+		get_filename_component(source ${source} ABSOLUTE)
+		string(REPLACE ${PROJECT_SOURCE_DIR}/ "" rel ${source})
+		if(rel)
+			string(REGEX REPLACE "/([^/]*)$" "" rel ${rel})
+			if(NOT rel STREQUAL source)
+				string(REPLACE "/" "\\\\" rel ${rel})
+				source_group(${rel} FILES ${source})
+			endif()
+		endif()
+	endforeach()
+endfunction()
+
+# Add sources to a target relative to current CMakeLists.txt directory (CMAKE_CURRENT_SOURCE_DIR)
+function(target_relative_sources target)
+	foreach(source ${ARGN})
+		target_sources(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
+	endforeach()
+endfunction()
+
+
 #########################################################
 # Source Files
 #########################################################
+
 add_subdirectory(src) # Primary source files
 add_subdirectory(res) # Resources like shaders (show up in IDE)
 set_property(TARGET ${CGRA_PROJECT} PROPERTY FOLDER "CGRA")

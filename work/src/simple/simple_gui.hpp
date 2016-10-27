@@ -2,7 +2,8 @@
 #pragma once
 
 #include "imgui.h"
-#include "opengl.hpp"
+
+#include "../opengl.hpp"
 
 namespace cgra {
 	namespace SimpleGUI {

@@ -6,8 +6,8 @@
 #include <sstream>
 #include <vector>
 
-#include "cgra_math.hpp"
-#include "opengl.hpp"
+#include "../cgra_math.hpp"
+#include "../opengl.hpp"
 
 #include <string>
 #include <sstream>
