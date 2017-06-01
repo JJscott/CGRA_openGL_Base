@@ -3,11 +3,16 @@
 
 #include "simple_vao.hpp"
 
+
 using namespace std;
+
 
 namespace cgra {
 
+
 	SimpleVAO::SimpleVAO() { }
+
+
 	SimpleVAO::~SimpleVAO() {
 		if (m_vao != 0) {
 			glDeleteBuffers(1, &m_vbo_pos);
@@ -17,17 +22,19 @@ namespace cgra {
 		}
 	}
 
+
 	void SimpleVAO::begin(GLenum mode) {
-		if (m_begin) throw runtime_error("begin() can not be called twice.");
-		if (m_vao != 0) throw runtime_error("begin() can not be called after end().");
+		if (m_begin) throw runtime_error("begin() can not be called twice");
+		if (m_vao != 0) throw runtime_error("begin() can not be called after end()");
 
 		m_mode = mode;
 		m_begin = true;
 	}
 
+
 	void SimpleVAO::end() {
 		if (m_vao == 0) {
-			if (!m_begin) throw runtime_error("begin() must be called before end().");
+			if (!m_begin) throw runtime_error("begin() must be called before end()");
 			// Create Vertex Array Object (VAO) that can hold information
 			// about how the VBOs should be set up
 			glGenVertexArrays(1, &m_vao);
@@ -72,14 +79,40 @@ namespace cgra {
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
 
+
+			// Set primitive count
+			int patch_size;
+			switch (m_mode) {
+			case GL_POINTS:
+			case GL_LINE_LOOP:
+				m_primitive_count = m_positions.size(); break;
+			case GL_LINES:
+			case GL_LINES_ADJACENCY:
+			case GL_LINE_STRIP:
+			case GL_LINE_STRIP_ADJACENCY:
+				m_primitive_count = m_positions.size() - 1; break;
+			case GL_TRIANGLES:
+			case GL_TRIANGLES_ADJACENCY:
+				m_primitive_count = m_positions.size() / 3; break;
+			case GL_TRIANGLE_FAN:
+			case GL_TRIANGLE_STRIP:
+			case GL_TRIANGLE_STRIP_ADJACENCY:
+				m_primitive_count = m_positions.size() - 2; break;
+			case GL_PATCHES:
+				glGetIntegerv(GL_PATCH_VERTICES, &patch_size);
+				m_primitive_count = m_positions.size() / patch_size; break;
+			default:
+				throw runtime_error("GLenum 'mode' is invalid");
+			}
+
 			// Clean up the data
-			m_positions.clear();
-			m_normals.clear();
-			m_uvs.clear();
+			vector<float>().swap(m_positions);
+			vector<float>().swap(m_normals);
+			vector<float>().swap(m_uvs);
 
 		}
 		else {
-			throw runtime_error("end() can not be called twice.");
+			throw runtime_error("end() can not be called twice");
 		}
 	}
 
@@ -89,44 +122,44 @@ namespace cgra {
 			// Bind our VAO which sets up all our buffers and data for us
 			glBindVertexArray(m_vao);
 			// Tell opengl to draw our VAO using the draw mode and how many verticies to render
-			glDrawArrays(m_mode, 0, m_vert_count);
+			glDrawArrays(m_mode, 0, m_primitive_count);
 		} else {
-			throw runtime_error("Can not draw uninitialized VAO.");
+			throw runtime_error("Can not draw uninitialized VAO");
 		}
 	}
 
 
-	void SimpleVAO::set_normal(GLfloat x, GLfloat y, GLfloat z) {
-		m_currentNormal = vec3(x, y, z);
+	void SimpleVAO::set_normal(float x, float y, float z) {
+		m_currentNormal = basic_vec<float, 3>(x, y, z);
 	}
 
-	void SimpleVAO::set_normal(GLfloat *v) {
-		m_currentNormal = vec3(v[0], v[1], v[2]);
+	void SimpleVAO::set_normal(float *v) {
+		m_currentNormal = basic_vec<float, 3>(v[0], v[1], v[2]);
 	}
 
-	void SimpleVAO::set_normal(vec3 v) {
+	void SimpleVAO::set_normal(basic_vec<float, 3> v) {
 		m_currentNormal = v;
 	}
 
 
 
-	void SimpleVAO::set_texcoord(GLfloat u, GLfloat v) {
-		m_currentUV = vec2(u, v);
+	void SimpleVAO::set_texcoord(float u, float v) {
+		m_currentUV = basic_vec<float, 2>(u, v);
 	}
 
-	void SimpleVAO::set_texcoord(GLfloat *v) {
-		m_currentUV = vec2(v[0], v[1]);
+	void SimpleVAO::set_texcoord(float *v) {
+		m_currentUV = basic_vec<float, 2>(v[0], v[1]);
 	}
 
-	void SimpleVAO::set_texcoord(vec2 v) {
+	void SimpleVAO::set_texcoord(basic_vec<float, 2> v) {
 		m_currentUV = v;
 	}
 
 
 
-	void SimpleVAO::add_vertex(GLfloat x, GLfloat y, GLfloat z) {
-		if (!m_begin) throw runtime_error("Can not add vertex before calling begin().");
-		if (m_vao != 0) throw runtime_error("Can not add vertex after calling end().");
+	void SimpleVAO::add_vertex(float x, float y, float z) {
+		if (!m_begin) throw runtime_error("Can not add vertex before calling begin()");
+		if (m_vao != 0) throw runtime_error("Can not add vertex after calling end()");
 		m_positions.push_back(x);
 		m_positions.push_back(y);
 		m_positions.push_back(z);
@@ -137,15 +170,13 @@ namespace cgra {
 
 		m_uvs.push_back(m_currentUV.x);
 		m_uvs.push_back(m_currentUV.y);
-
-		m_vert_count++;
 	}
 
-	void SimpleVAO::add_vertex(GLfloat *v) {
+	void SimpleVAO::add_vertex(float *v) {
 		add_vertex(v[0], v[1], v[2]);
 	}
 
-	void SimpleVAO::add_vertex(vec3 v) {
+	void SimpleVAO::add_vertex(basic_vec<float, 3> v) {
 		add_vertex(v.x, v.y, v.z);
 	}
 }

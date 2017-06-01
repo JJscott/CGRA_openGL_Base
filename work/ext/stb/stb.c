@@ -1,5 +1,4 @@
-#ifndef PXLJM_STB_HEADER
-#define PXLJM_STB_HEADER
+#pragma once
 
 //#define STB_DEFINE
 //#include "stb.h"
@@ -45,5 +44,3 @@
 
 // #define STB_VOXEL_RENDER_IMPLEMENTATION
 // #include "stb_voxel_render.h"
-
-#endif

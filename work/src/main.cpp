@@ -1,6 +1,4 @@
 
-#include <cmath>
-#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <stdexcept>
@@ -26,6 +24,9 @@ vec2 mousePosition;
 
 
 void cursorPosCallback(GLFWwindow *, double xpos, double ypos) {
+	// we don't need to forward this to imgui
+
+	// TODO do something
 	if (leftMouseDown) {
 		yaw += radians(mousePosition.x - xpos);
 		pitch += radians(mousePosition.y - ypos);
@@ -35,25 +36,28 @@ void cursorPosCallback(GLFWwindow *, double xpos, double ypos) {
 
 
 void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
-	SimpleGUI::mouseButtonCallback(win, button, action, mods);
+	SimpleGUI::mouseButtonCallback(win, button, action, mods); // forward to imgui
 	if(ImGui::IsMouseHoveringAnyWindow()) return; // block input with gui 
 
+	// TODO do something
 	if (button == GLFW_MOUSE_BUTTON_LEFT)
 		leftMouseDown = (action == GLFW_PRESS);
 }
 
 
 void scrollCallback(GLFWwindow *win, double xoffset, double yoffset) {
-	SimpleGUI::scrollCallback(win, xoffset, yoffset);
+	SimpleGUI::scrollCallback(win, xoffset, yoffset); // forward to imgui
 	if(ImGui::IsMouseHoveringAnyWindow()) return; // block input with gui
 
+	// TODO do something
 }
 
 
 void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
-	SimpleGUI::keyCallback(win, key, scancode, action, mods);
+	SimpleGUI::keyCallback(win, key, scancode, action, mods); // forward to imgui
 	if(ImGui::IsAnyItemActive()) return; // block input with gui
 
+	// TODO do something
 }
 
 
@@ -61,6 +65,7 @@ void charCallback(GLFWwindow *win, unsigned int c) {
 	SimpleGUI::charCallback(win, c);
 	if(ImGui::IsAnyItemActive()) return; // block input with gui
 
+	// TODO do something
 }
 
 
@@ -74,7 +79,7 @@ void render(int width, int height) {
 
 	static GLuint texture = 0;
 	if (texture == 0) {
-		image<4> img("work/res/textures/uv_texture.jpg");
+		image<float, 4> img("work/res/textures/uv_texture.jpg");
 		texture = img.make_texture();
 	}
 
@@ -118,8 +123,8 @@ void render(int width, int height) {
 
 	// Set up the matricies / uniforms
 	// 
-	mat4 proj = mat4::perspectiveProjection(1.0, float(width)/height, 0.1, 100.0);
-	mat4 view = mat4::translate(0,0,-5) * mat4::rotate_x(-pitch) * mat4::rotate_y(-yaw);
+	mat4 proj = perspective<mat4>(1.0, float(width)/height, 0.1, 100.0);
+	mat4 view = translate3<mat4>(0,0,-5) * rotate3x<mat4>(-pitch) * rotate3y<mat4>(-yaw);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.data());
 
@@ -142,12 +147,52 @@ void renderGUI() {
 
 // Forward decleration for cleanliness
 void APIENTRY debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
+void init_gfx();
 
 
 //Main program
 // 
-int main() {
-// int main(int argc, char **argv) {
+int main(int argc, char **argv) {
+
+	// initialize opengl and imgui
+	init_gfx();
+
+	// Loop until the user closes the window
+	while (!glfwWindowShouldClose(window)) {
+
+		// Make sure we draw to the WHOLE window
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		glViewport(0, 0, width, height);
+
+		// Grey/Blueish background
+		glClearColor(0.3f,0.3f,0.4f,1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Main Render
+		render(width, height);
+
+		// GUI Render on top
+		SimpleGUI::newFrame();
+		renderGUI();
+		SimpleGUI::render();
+
+		// Swap front and back buffers
+		glfwSwapBuffers(window);
+
+		// Poll for and process events
+		glfwPollEvents();
+	}
+
+	SimpleGUI::shutdown();
+	glfwTerminate();
+}
+
+
+
+// Init gfx
+// 
+void init_gfx() {
 
 	// Initialize the GLFW library
 	if (!glfwInit()) {
@@ -172,7 +217,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
 	// Create a windowed mode window and its OpenGL context
-	window = glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
+	window = glfwCreateWindow(1024, 768, "Hello World", nullptr, nullptr);
 	if (!window) {
 		cerr << "Error: Could not create GLFW window" << endl;
 		abort(); // Unrecoverable error
@@ -216,7 +261,8 @@ int main() {
 		glDebugMessageCallbackARB(debugCallback, nullptr);
 		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, true);
 		cout << "GL_ARB_debug_output callback installed" << endl;
-	} else {
+	}
+	else {
 		cout << "GL_ARB_debug_output not available. No worries." << endl;
 	}
 
@@ -230,49 +276,15 @@ int main() {
 		cerr << "Error: Could not initialize IMGUI" << endl;
 		abort();
 	}
-
-
-	// Loop until the user closes the window
-	while (!glfwWindowShouldClose(window)) {
-
-		// Make sure we draw to the WHOLE window
-		int width, height;
-		glfwGetFramebufferSize(window, &width, &height);
-		glViewport(0, 0, width, height);
-
-		// Grey/Blueish background
-		glClearColor(0.3f,0.3f,0.4f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Main Render
-		render(width, height);
-
-		// GUI Render on top
-		SimpleGUI::newFrame();
-		renderGUI();
-		SimpleGUI::render();
-
-		// Swap front and back buffers
-		glfwSwapBuffers(window);
-
-		// Poll for and process events
-		glfwPollEvents();
-	}
-
-	SimpleGUI::shutdown();
-	glfwTerminate();
 }
 
 
 
-//
-// Fancy debug stuff
-//
 
 // function to translate source to string
 const char * getStringForSource(GLenum source) {
-	switch(source) {
-	case GL_DEBUG_SOURCE_API: 
+	switch (source) {
+	case GL_DEBUG_SOURCE_API:
 		return "API";
 	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
 		return "Window System";
@@ -291,8 +303,8 @@ const char * getStringForSource(GLenum source) {
 
 // function to translate severity to string
 const char * getStringForSeverity(GLenum severity) {
-	switch(severity) {
-	case GL_DEBUG_SEVERITY_HIGH: 
+	switch (severity) {
+	case GL_DEBUG_SEVERITY_HIGH:
 		return "High";
 	case GL_DEBUG_SEVERITY_MEDIUM:
 		return "Medium";
@@ -307,8 +319,8 @@ const char * getStringForSeverity(GLenum severity) {
 
 // function to translate type to string
 const char * getStringForType(GLenum type) {
-	switch(type) {
-	case GL_DEBUG_TYPE_ERROR: 
+	switch (type) {
+	case GL_DEBUG_TYPE_ERROR:
 		return "Error";
 	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
 		return "Deprecated Behaviour";

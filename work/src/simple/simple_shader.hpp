@@ -31,54 +31,58 @@ namespace cgra {
 		explicit shader_link_error(const std::string &what_ = "Shader program linking failed.") : shader_error(what_) { }
 	};
 
-	inline void printShaderInfoLog(GLuint obj) {
-		int infologLength = 0;
-		int charsWritten = 0;
-		glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
-		if (infologLength > 1) {
-			std::vector<char> infoLog(infologLength);
-			glGetShaderInfoLog(obj, infologLength, &charsWritten, &infoLog[0]);
-			std::cout << "SimpleShader : " << "SHADER :\n" << &infoLog[0] << std::endl;
-		}
-	}
 
-	inline void printProgramInfoLog(GLuint obj) {
-		int infologLength = 0;
-		int charsWritten = 0;
-		glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
-		if (infologLength > 1) {
-			std::vector<char> infoLog(infologLength);
-			glGetProgramInfoLog(obj, infologLength, &charsWritten, &infoLog[0]);
-			std::cout << "SimpleShader : " << "PROGRAM :\n" << &infoLog[0] << std::endl;
-		}
-	}
+	namespace detail {
 
-	inline GLuint compileShader(GLenum type, const std::string &text) {
-		GLuint shader = glCreateShader(type);
-		const char *text_c = text.c_str();
-		glShaderSource(shader, 1, &text_c, nullptr);
-		glCompileShader(shader);
-		GLint compile_status;
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);
-		if (!compile_status) {
+		inline void printShaderInfoLog(GLuint obj) {
+			int infologLength = 0;
+			int charsWritten = 0;
+			glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
+			if (infologLength > 1) {
+				std::vector<char> infoLog(infologLength);
+				glGetShaderInfoLog(obj, infologLength, &charsWritten, &infoLog[0]);
+				std::cout << "SimpleShader : " << "SHADER :\n" << &infoLog[0] << std::endl;
+			}
+		}
+
+		inline void printProgramInfoLog(GLuint obj) {
+			int infologLength = 0;
+			int charsWritten = 0;
+			glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
+			if (infologLength > 1) {
+				std::vector<char> infoLog(infologLength);
+				glGetProgramInfoLog(obj, infologLength, &charsWritten, &infoLog[0]);
+				std::cout << "SimpleShader : " << "PROGRAM :\n" << &infoLog[0] << std::endl;
+			}
+		}
+
+		inline GLuint compileShader(GLenum type, const std::string &text) {
+			GLuint shader = glCreateShader(type);
+			const char *text_c = text.c_str();
+			glShaderSource(shader, 1, &text_c, nullptr);
+			glCompileShader(shader);
+			GLint compile_status;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);
+			if (!compile_status) {
+				printShaderInfoLog(shader);
+				throw shader_compile_error();
+			}
+			// always print, so we can see warnings
 			printShaderInfoLog(shader);
-			throw shader_compile_error();
+			return shader;
 		}
-		// always print, so we can see warnings
-		printShaderInfoLog(shader);
-		return shader;
-	}
 
-	inline void linkShaderProgram(GLuint prog) {
-		glLinkProgram(prog);
-		GLint link_status;
-		glGetProgramiv(prog, GL_LINK_STATUS, &link_status);
-		if (!link_status) {
+		inline void linkShaderProgram(GLuint prog) {
+			glLinkProgram(prog);
+			GLint link_status;
+			glGetProgramiv(prog, GL_LINK_STATUS, &link_status);
+			if (!link_status) {
+				printProgramInfoLog(prog);
+				throw shader_link_error();
+			}
+			// always print, so we can see warnings
 			printProgramInfoLog(prog);
-			throw shader_link_error();
 		}
-		// always print, so we can see warnings
-		printProgramInfoLog(prog);
 	}
 
 	inline GLuint makeShaderProgram(const std::vector<GLenum> &stypes, const std::vector<std::string> &sources) {
@@ -89,11 +93,11 @@ namespace cgra {
 		GLuint prog = glCreateProgram();
 
 		for (size_t i = 0; i < stypes.size(); ++i) {
-			auto shader = compileShader(stypes[i], sources[i]);
+			auto shader = detail::compileShader(stypes[i], sources[i]);
 			glAttachShader(prog, shader);
 		}
 
-		linkShaderProgram(prog);
+		detail::linkShaderProgram(prog);
 		std::cout << "SimpleShader : " << "Shader program compiled and linked successfully" << std::endl;
 		return prog;
 	}
@@ -143,11 +147,11 @@ namespace cgra {
 			oss << "#version " << profile << std::endl;
 			oss << "#define " << get_define(stype) << std::endl;
 			oss << source;
-			auto shader = compileShader(stype, oss.str());
+			auto shader = detail::compileShader(stype, oss.str());
 			glAttachShader(prog, shader);
 		}
 
-		linkShaderProgram(prog);
+		detail::linkShaderProgram(prog);
 		std::cout << "SimpleShader : " << "Shader program compiled and linked successfully" << std::endl;
 		return prog;
 	}
