@@ -1,21 +1,31 @@
 
-# Source files
-# list your source files (.cpp) here
+#########################################################
+# Source Files
+#########################################################
+
+# ----TODO------------------- #
+# list your source files here #
+# --------------------------- #
 SET(sources
 	"main.cpp"
 	"cgra_math.hpp"
 	"opengl.hpp"
 )
 
-
 # Add executable target and link libraries
-add_executable(${CGRA_PROJECT} ${headers} ${sources})
+add_executable(${CGRA_PROJECT} ${sources})
 
-
-# Sources from subdirectories
-# list your subdirectories here
+# ----TODO--------------------- #
+# list your subdirectories here #
+# ----------------------------- #
 add_subdirectory(simple)
 
+
+
+
+#########################################################
+# Link and Build Executable
+#########################################################
 
 # Set source groups (helper method)
 target_source_group_tree(${CGRA_PROJECT})

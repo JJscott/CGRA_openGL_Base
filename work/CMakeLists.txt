@@ -27,11 +27,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 
+
+
 #########################################################
 # Find OpenGL
 #########################################################
 
 find_package(OpenGL REQUIRED)
+
+
 
 
 #########################################################
@@ -45,20 +49,30 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/ext/stb")
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/imgui")
 
 
+
+
 #########################################################
 # Set Compiler Flags
 #########################################################
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	# Full normal warnings
-	add_compile_options(/W4)
-	# Ignore C4800: forcing X to bool (performance warning)
+	# # C++ latest
+	add_compile_options(/std:c++latest)
+	# UTF-8 source and execution charsets
+	add_compile_options(/utf-8)
+	# Full normal warnings, multithreaded build
+	add_compile_options(/W4 /MP)
+	# Disable C4800: forcing X to bool (performance warning)
 	add_compile_options(/wd4800)
+	# OpenMP
+	add_compile_options(/openmp)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	# C++14
-	add_compile_options(-std=c++1y)
-	# Full normal warnings
-	add_compile_options(-Wall -Wextra -pedantic)
+	# # C++17, full normal warnings
+	add_compile_options(-std=c++1z -Wall -Wextra -pedantic)
+	# don't export by default
+	add_compile_options(-fvisibility=hidden)
+	# Threading support, OpenMP, enable SSE2
+	add_compile_options(-pthread -fopenmp -msse2)
 	# Promote missing return to error
 	add_compile_options(-Werror=return-type)
 	# enable coloured output if gcc >= 4.9
@@ -67,17 +81,22 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		add_compile_options(-fdiagnostics-color)
 	endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
-	# C++14
-	add_compile_options(-std=c++1y)
-	# Full normal warnings
-	add_compile_options(-Wall -Wextra -pedantic)
+	# # C++17, full normal warnings
+	add_compile_options(-std=c++1z -Wall -Wextra -pedantic)
+	# don't export by default
+	add_compile_options(-fvisibility=hidden)
+	# Threading support, OpenMP, enable SSE2
+	add_compile_options(-pthread -fopenmp -msse2)
 	# Promote missing return to error
 	add_compile_options(-Werror=return-type)
 endif()
 
 
+
+
 #########################################################
 # Helper methods
+# Allows us to set up source folders in a nice way
 #########################################################
 
 # Set source groups to mirror real directory tree
@@ -104,6 +123,8 @@ function(target_relative_sources target)
 endfunction()
 
 
+
+
 #########################################################
 # Source Files
 #########################################################
@@ -111,8 +132,3 @@ endfunction()
 add_subdirectory(src) # Primary source files
 add_subdirectory(res) # Resources like shaders (show up in IDE)
 set_property(TARGET ${CGRA_PROJECT} PROPERTY FOLDER "CGRA")
-
-
-
-
-
