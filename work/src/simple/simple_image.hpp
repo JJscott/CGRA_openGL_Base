@@ -154,7 +154,7 @@ namespace cgra {
 
 		// outputs the image to the given filepath and appends ".png"
 		// TODO make generic of jpg, hdr etc.
-		void save(const std::string &filename) {
+		void write_png(const std::string &filename) {
 			std::vector<unsigned char> char_data(m_size.x*m_size.y*N, 0);
 			for (size_t i = 0; i < m_size.x*m_size.y*N; i++)
 				char_data[i] = 255 * m_data[i];
@@ -168,20 +168,20 @@ namespace cgra {
 		}
 
 		// creates an image from FB 0
-		static image screenshot(bool save) {
+		static image screenshot(bool write) {
 			using namespace std;
 			int w, h;
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glfwGetFramebufferSize(glfwGetCurrentContext(), &w, &h);
 
 			image img(w, h);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glReadPixels(0, 0, w, h, gl_image_format<N>::value, GL_FLOAT, img.data());
 
-			if (save) {
+			if (write) {
 				ostringstream filename_ss;
 				filename_ss << "screenshot_" << (chrono::system_clock::now().time_since_epoch() / 1ms);
 				string filename = filename_ss.str();
-				img.save(filename);
+				img.write_png(filename);
 			}
 
 			return img;

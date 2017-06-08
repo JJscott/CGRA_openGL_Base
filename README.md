@@ -1,7 +1,6 @@
 # CGRA OpenGL Base Project
 
 
----
 # FAQ
 
 #### What math library are you using (and why)?
@@ -21,8 +20,9 @@ if (ImGui::Begin("Window Title")) {
 ImGui::End();
 ```
 
----
+
 # Requirements
+
 The project requires [CMake](https://cmake.org/) to build before compiling. The recommended way to build to project is to create a build folder then using CMake to create to project inside it. The following sections are a guides to building common project types.
 ```sh
 $ mkdir build
@@ -31,8 +31,9 @@ $ mkdir build
 This project also requires OpenGL v3.3 and a suitable C++17 compiler.
 
 
----
+
 ## Linux
+
 #### Command Line
 
 The simpliest way to set up a basic project is to run the shell script `f5.sh` which runs the `cmake`, `make` and run commands for you.
@@ -66,14 +67,18 @@ Start Eclipse and go to `File > Import > Existing Projects into Workspace`, brow
 If  you  need  to  run  with  arguments  (and  you  will  with  some  projects)  go  to `Run > Run Configurations > Arguments` and enter your arguments there.  For example: `./work/res/assets/teapot.obj `
 
 
----
+
 ## Windows
+
 #### Visual Studio
+
 This project requires at least Visual Studio 2015. You can get [Visual Studio Community 2017](https://www.visualstudio.com/downloads/) for free from Microsoft.
-| Product | XX |
-| --- | --- |
+
+| Product |  XX  |
+|:-------:|:----:|
 | Visual Studio 2015 | 14 |
 | Visual Studio 2017 | 15 |
+
 Run the `cmake` command for Visual Studio with the appropriate version number (XX).
 ```sh
 > cmake -G "Visual Studio XX" ..\work
@@ -92,9 +97,11 @@ After opening the solution (`.sln`) you will need to set some additional variabl
  -- Set `Command Arguments` to whatever is required by your program
 
 
----
+
 ## OSX
+
 #### XCode
+
 [Xcode](https://developer.apple.com/xcode/) is an IDE that offers a little more than simple text editing. The setup again is very similar to Eclipse.
 ```sh
 $ cd build
@@ -107,12 +114,13 @@ Once you're setup, you can build your project with Xcode, but have to execute yo
 $ ./build/bin/base [args..]
 ```
 
----
+
 # Simple Library
+
 In addition to the math library and other external libraries, this project provides some simple classes and functions to get started with a graphics application. Further description and documentation can be found in the respective headers.
 
 | File | Description |
-| ---- | ----------- |
+|:----:|:------------|
 | `simple_gui.hpp` | Provides methods for setting up and rendering ImGui  |
 | `simple_image.hpp` | An image class that can loaded from and saved to a file |
 | `simple_shader.hpp` | Functions for compiling shaders from files or strings |
