@@ -43,7 +43,7 @@ out vec3 color;
 
 void main() {
 	vec3 eye = normalize(-f_in.position);
-	vec3 textureColor = texture2D(uTexture0, f_in.textureCoord0).rgb;
+	vec3 textureColor = texture(uTexture0, f_in.textureCoord0).rgb;
 	color = abs(dot(normalize(f_in.normal), eye)) * textureColor;
 }
 
