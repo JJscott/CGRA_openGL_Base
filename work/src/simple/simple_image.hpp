@@ -17,6 +17,37 @@
 
 namespace cgra {
 
+	namespace detail {
+		template <size_t N> struct gl_image_format { };
+		template <> struct gl_image_format<1> : std::integral_constant<GLenum, GL_RED> { };
+		template <> struct gl_image_format<2> : std::integral_constant<GLenum, GL_RG> { };
+		template <> struct gl_image_format<3> : std::integral_constant<GLenum, GL_RGB> { };
+		template <> struct gl_image_format<4> : std::integral_constant<GLenum, GL_RGBA> { };
+
+
+		template <typename T> struct gl_type_format { };
+		template <> struct gl_type_format<char> : std::integral_constant<GLenum, GL_BYTE> { };
+		template <> struct gl_type_format<short> : std::integral_constant<GLenum, GL_SHORT> { };
+		template <> struct gl_type_format<int> : std::integral_constant<GLenum, GL_INT> { };
+		template <> struct gl_type_format<unsigned char> : std::integral_constant<GLenum, GL_UNSIGNED_BYTE> { };
+		template <> struct gl_type_format<unsigned short> : std::integral_constant<GLenum, GL_UNSIGNED_SHORT> { };
+		template <> struct gl_type_format<unsigned int> : std::integral_constant<GLenum, GL_UNSIGNED_INT> { };
+		template <> struct gl_type_format<float> : std::integral_constant<GLenum, GL_FLOAT> { };
+
+
+		template <typename T>
+		struct stb_image_interpreter {
+			inline T operator()(float f) const { return T{ f }; }
+			inline T operator()(unsigned char c) const { return T{ c }; }
+		};
+
+		template <>
+		struct stb_image_interpreter<float> {
+			inline float operator()(float f) const { return f; }
+			inline float operator()(unsigned char c) const { return c / 255.f; }
+		};
+	}
+
 	template <typename T, size_t> class image;
 	using image1f = image<float, 1>;
 	using image2f = image<float, 2>;
@@ -175,7 +206,7 @@ namespace cgra {
 			glfwGetFramebufferSize(glfwGetCurrentContext(), &w, &h);
 
 			image img(w, h);
-			glReadPixels(0, 0, w, h, gl_image_format<N>::value, GL_FLOAT, img.data());
+			glReadPixels(0, 0, w, h, detail::gl_image_format<N>::value, GL_FLOAT, img.data());
 
 			if (write) {
 				ostringstream filename_ss;
@@ -189,34 +220,4 @@ namespace cgra {
 	};
 
 
-	namespace detail {
-		template <size_t N> struct gl_image_format { };
-		template <> struct gl_image_format<1> : std::integral_constant<GLenum, GL_RED> { };
-		template <> struct gl_image_format<2> : std::integral_constant<GLenum, GL_RG> { };
-		template <> struct gl_image_format<3> : std::integral_constant<GLenum, GL_RGB> { };
-		template <> struct gl_image_format<4> : std::integral_constant<GLenum, GL_RGBA> { };
-
-
-		template <typename T> struct gl_type_format { };
-		template <> struct gl_type_format<char> : std::integral_constant<GLenum, GL_BYTE> { };
-		template <> struct gl_type_format<short> : std::integral_constant<GLenum, GL_SHORT> { };
-		template <> struct gl_type_format<int> : std::integral_constant<GLenum, GL_INT> { };
-		template <> struct gl_type_format<unsigned char> : std::integral_constant<GLenum, GL_UNSIGNED_BYTE> { };
-		template <> struct gl_type_format<unsigned short> : std::integral_constant<GLenum, GL_UNSIGNED_SHORT> { };
-		template <> struct gl_type_format<unsigned int> : std::integral_constant<GLenum, GL_UNSIGNED_INT> { };
-		template <> struct gl_type_format<float> : std::integral_constant<GLenum, GL_FLOAT> { };
-
-
-		template <typename T>
-		struct stb_image_interpreter {
-			inline T operator()(float f) const { return T{ f }; }
-			inline T operator()(unsigned char c) const { return T{ f }; }
-		};
-
-		template <>
-		struct stb_image_interpreter<float> {
-			inline float operator()(float f) const { return f; }
-			inline float operator()(unsigned char c) const { return c / 255.f; }
-		};
-	}
 }

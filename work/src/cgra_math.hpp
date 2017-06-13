@@ -38,14 +38,11 @@
 #include <utility> // std::declval
 
 
-// Visual Studio prior to 2017 doesn't support constexpr well enough for our types
-#if defined(_MSC_VER) && _MSC_VER < 1910
-#define CGRA_CONSTEXPR_FUNCTION
-#endif
 
-// we require constexpr for variables, but it is optional for functions
-#ifndef CGRA_CONSTEXPR_FUNCTION
-#define CGRA_CONSTEXPR_FUNCTION constexpr
+
+// Visual Studio versions prior to 2015 lack constexpr support
+#if defined(_MSC_VER) && _MSC_VER < 1900 && !defined(constexpr)
+#define constexpr
 #endif
 
 // We undefine min and max macros if they exist
@@ -604,7 +601,7 @@ namespace cgra {
 			static const size_t size = N;
 
 			template <size_t I, typename VecT>
-			CGRA_CONSTEXPR_FUNCTION static decltype(auto) get(VecT &&v) {
+			constexpr static decltype(auto) get(VecT &&v) {
 				return std::forward<VecT>(v)[I];
 			}
 		};
@@ -759,7 +756,7 @@ namespace cgra {
 
 		template <size_t I, typename T, bool IsVec>
 		struct vec_get_impl {
-			CGRA_CONSTEXPR_FUNCTION static decltype(auto) go(T &&t) {
+			constexpr static decltype(auto) go(T &&t) {
 				return std::forward<T>(t);
 			}
 		};
@@ -772,7 +769,7 @@ namespace cgra {
 		};
 
 		template <typename CatT, size_t I, typename T>
-		CGRA_CONSTEXPR_FUNCTION decltype(auto) vec_get(T &&t) {
+		constexpr decltype(auto) vec_get(T &&t) {
 			static_assert(
 				is_relatively_vector<CatT, T>::value || is_relatively_scalar<CatT, T>::value,
 				"vector cat argument is not relatively vector or scalar"
@@ -781,12 +778,12 @@ namespace cgra {
 		}
 
 		template <typename CatT, typename ArgTupT, size_t ...Js, size_t ...Ks>
-		CGRA_CONSTEXPR_FUNCTION CatT cat_impl_impl(ArgTupT &&args, std::index_sequence<Js...>, std::index_sequence<Ks...>) {
+		constexpr CatT cat_impl_impl(ArgTupT &&args, std::index_sequence<Js...>, std::index_sequence<Ks...>) {
 			return CatT(detail::vec_element_ctor_tag(), vec_get<CatT, Ks>(std::get<Js>(std::forward<ArgTupT>(args)))...);
 		}
 
 		template <typename CatT, typename ...Ts>
-		CGRA_CONSTEXPR_FUNCTION CatT cat_impl(Ts &&...args) {
+		constexpr CatT cat_impl(Ts &&...args) {
 			using argseq0 = typename cat_arg_seq<CatT, std::index_sequence_for<Ts...>, std::tuple<Ts...>>::type;
 			using valseq0 = typename cat_val_seq<CatT, std::tuple<Ts...>>::type;
 			// trim to size so that extra components are ignored
@@ -799,24 +796,24 @@ namespace cgra {
 		}
 
 		template <typename T>
-		CGRA_CONSTEXPR_FUNCTION const T & constify(const T &t) {
+		constexpr const T & constify(const T &t) {
 			return t;
 		}
 
 		template <typename T>
 		struct forward_or_cast_impl {
-			CGRA_CONSTEXPR_FUNCTION static decltype(auto) go(T &t) { return t; }
-			CGRA_CONSTEXPR_FUNCTION static decltype(auto) go(T &&t) { return std::move(t); };
-			CGRA_CONSTEXPR_FUNCTION static decltype(auto) go(const T &t) { return t; }
+			constexpr static decltype(auto) go(T &t) { return t; }
+			constexpr static decltype(auto) go(T &&t) { return std::move(t); };
+			constexpr static decltype(auto) go(const T &t) { return t; }
 
 			template <typename U>
-			CGRA_CONSTEXPR_FUNCTION static T go(U &&u) {
+			constexpr static T go(U &&u) {
 				return static_cast<T>(std::forward<U>(u));
 			}
 		};
 
 		template <typename T, typename U>
-		CGRA_CONSTEXPR_FUNCTION decltype(auto) forward_or_cast(U &&u) {
+		constexpr decltype(auto) forward_or_cast(U &&u) {
 			return forward_or_cast_impl<T>::go(std::forward<U>(u));
 		}
 
@@ -827,19 +824,19 @@ namespace cgra {
 
 		public:
 			using value_t = T;
-			static constexpr size_t size = N;
+			static const size_t size = N;
 
-			CGRA_CONSTEXPR_FUNCTION repeat_vec() { }
+			constexpr repeat_vec() { }
 
 			template <typename U>
-			CGRA_CONSTEXPR_FUNCTION explicit repeat_vec(U &&u) : m_v(std::forward<U>(u)) { }
+			constexpr explicit repeat_vec(U &&u) : m_v(std::forward<U>(u)) { }
 
-			CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+			constexpr T & operator[](size_t i) {
 				assert(i < N);
 				return m_v;
 			}
 
-			CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+			constexpr const T & operator[](size_t i) const {
 				assert(i < N);
 				return m_v;
 			}
@@ -850,7 +847,7 @@ namespace cgra {
 		};
 
 		template <typename T, size_t Cols, size_t Rows>
-		CGRA_CONSTEXPR_FUNCTION auto make_mat(basic_vec<basic_vec<T, Rows>, Cols> &&v) {
+		constexpr auto make_mat(basic_vec<basic_vec<T, Rows>, Cols> &&v) {
 			return basic_mat<T, Cols, Rows>(std::move(v));
 		}
 	}
@@ -864,14 +861,14 @@ namespace cgra {
 
 	public:
 		using value_t = T;
-		static constexpr size_t size = N;
+		static const size_t size = N;
 
 		// default ctor
-		CGRA_CONSTEXPR_FUNCTION basic_vec() : basic_vec(T()) { }
+		constexpr basic_vec() : basic_vec(T()) { }
 
 		// tagged ctor, used by cat
 		template <typename ...ArgTs>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(detail::vec_element_ctor_tag, ArgTs &&...args) :
+		constexpr explicit basic_vec(detail::vec_element_ctor_tag, ArgTs &&...args) :
 #ifdef __EDG__
 			// intellisense needs a hand here
 			m_data{ detail::constify(detail::forward_or_cast<T>(std::forward<ArgTs>(args)))... }
@@ -887,35 +884,35 @@ namespace cgra {
 		// this is only a better match for 1 arg than the 1-arg ctors if they sfinae out
 		// direct enforcement with explicit 1st and 2nd args results in this being used instead of the above tagged ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(ArgTs &&...args) :
+		constexpr explicit basic_vec(ArgTs &&...args) :
 			basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...))
 		{ }
 
 		// 1-arg magic ctor
 		template <typename VecT, typename = std::enable_if_t<detail::is_relatively_vector<basic_vec, VecT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_vec(VecT &&v) :
+		constexpr basic_vec(VecT &&v) :
 			basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v)))
 		{ }
 
 		// scalar broadcast ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(const T &t) :
+		constexpr explicit basic_vec(const T &t) :
 			// constify is to help intellisense, but should have no impact on actual compilation
 			basic_vec(detail::constify(detail::repeat_vec<const T &, N>(t)))
 		{ }
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(i < N);
 			return m_data[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(i < N);
 			return m_data[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION T * data() { return &m_data[0]; }
+		constexpr T * data() { return &m_data[0]; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &m_data[0]; }
+		constexpr const T * data() const { return &m_data[0]; }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_vec &v) {
 			out << '(' << v[0];
@@ -936,32 +933,32 @@ namespace cgra {
 		using value_t = T;
 		static constexpr size_t size = 0;
 
-		CGRA_CONSTEXPR_FUNCTION basic_vec() { }
+		constexpr basic_vec() { }
 
 		// magic ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(ArgTs &&...) { }
+		constexpr explicit basic_vec(ArgTs &&...) { }
 
 		// 1-arg magic ctor
 		template <typename VecT, typename = std::enable_if_t<detail::is_relatively_vector<basic_vec, VecT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_vec(VecT &&) { }
+		constexpr basic_vec(VecT &&) { }
 
 		// scalar broadcast ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(const T &) { }
+		constexpr explicit basic_vec(const T &) { }
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(false);
 			return reinterpret_cast<T &>(*this);
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(false);
 			return reinterpret_cast<const T &>(*this);
 		}
 
 		T * data() { return reinterpret_cast<T *>(this); }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return reinterpret_cast<const T *>(this); }
+		constexpr const T * data() const { return reinterpret_cast<const T *>(this); }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_vec &v) {
 			return out << "( )";
@@ -979,11 +976,11 @@ namespace cgra {
 		union{ T x; T r; T s; };
 
 		// default ctor
-		CGRA_CONSTEXPR_FUNCTION basic_vec() : x{} { }
+		constexpr basic_vec() : x{} { }
 
 		// tagged ctor, used by cat
 		template <typename U1>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_) :
+		constexpr explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_) :
 #ifdef __EDG__
 			// intellisense needs a hand here
 			x{ detail::constify(detail::forward_or_cast<T>(std::forward<U1>(x_))) }
@@ -995,28 +992,28 @@ namespace cgra {
 
 		// magic ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(ArgTs &&...args) :	basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
+		constexpr explicit basic_vec(ArgTs &&...args) :	basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
 
 		// 1-arg magic ctor
 		template <typename VecT, typename = std::enable_if_t<detail::is_relatively_vector<basic_vec, VecT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_vec(VecT &&v) :	basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
+		constexpr basic_vec(VecT &&v) :	basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
 
 		// scalar broadcast ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(const T &t) : basic_vec(detail::constify(detail::repeat_vec<const T &, 1>(t))) { }
+		constexpr explicit basic_vec(const T &t) : basic_vec(detail::constify(detail::repeat_vec<const T &, 1>(t))) { }
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(i < 1);
 			return (&x)[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(i < 1);
 			return (&x)[i];
 		}
 
 		T * data() { return &x; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &x; }
+		constexpr const T * data() const { return &x; }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_vec &v) {
 			return out << '(' << v.x << ')';
@@ -1035,11 +1032,11 @@ namespace cgra {
 		union{ T y; T g; T t; };
 
 		// default ctor
-		CGRA_CONSTEXPR_FUNCTION basic_vec() : x{}, y{} { }
+		constexpr basic_vec() : x{}, y{} { }
 
 		// tagged ctor, used by cat
 		template <typename U1, typename U2>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_, U2 &&y_) :
+		constexpr explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_, U2 &&y_) :
 #ifdef __EDG__
 			// intellisense needs a hand here
 			x{ detail::constify(detail::forward_or_cast<T>(std::forward<U1>(x_))) },
@@ -1053,28 +1050,28 @@ namespace cgra {
 
 		// magic ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(ArgTs &&...args) : basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
+		constexpr explicit basic_vec(ArgTs &&...args) : basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
 
 		// 1-arg magic ctor
 		template <typename VecT, typename = std::enable_if_t<detail::is_relatively_vector<basic_vec, VecT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_vec(VecT &&v) :	basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
+		constexpr basic_vec(VecT &&v) :	basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
 
 		// scalar broadcast ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(const T &t) : 	basic_vec(detail::constify(detail::repeat_vec<const T &, 2>(t))) { }
+		constexpr explicit basic_vec(const T &t) : 	basic_vec(detail::constify(detail::repeat_vec<const T &, 2>(t))) { }
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(i < 2);
 			return (&x)[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(i < 2);
 			return (&x)[i];
 		}
 
 		T * data() { return &x; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &x; }
+		constexpr const T * data() const { return &x; }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_vec &v) {
 			return out << '(' << v.x << ", " << v.y << ')';
@@ -1094,11 +1091,11 @@ namespace cgra {
 		union{ T z; T b; T p; };
 
 		// default ctor
-		CGRA_CONSTEXPR_FUNCTION basic_vec() : x{}, y{}, z{} { }
+		constexpr basic_vec() : x{}, y{}, z{} { }
 		
 		// tagged ctor, used by cat
 		template <typename U1, typename U2, typename U3>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_, U2 &&y_, U3 &&z_) :
+		constexpr explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_, U2 &&y_, U3 &&z_) :
 #ifdef __EDG__
 			// intellisense needs a hand here
 			x{ detail::constify(detail::forward_or_cast<T>(std::forward<U1>(x_))) },
@@ -1114,28 +1111,28 @@ namespace cgra {
 
 		// magic ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(ArgTs &&...args) : basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
+		constexpr explicit basic_vec(ArgTs &&...args) : basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
 
 		// 1-arg magic ctor
 		template <typename VecT, typename = std::enable_if_t<detail::is_relatively_vector<basic_vec, VecT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_vec(VecT &&v) : basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
+		constexpr basic_vec(VecT &&v) : basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
 
 		// scalar broadcast ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(const T &t) : basic_vec(detail::constify(detail::repeat_vec<const T &, 3>(t))) { }
+		constexpr explicit basic_vec(const T &t) : basic_vec(detail::constify(detail::repeat_vec<const T &, 3>(t))) { }
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(i < 3);
 			return (&x)[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(i < 3);
 			return (&x)[i];
 		}
 
 		T * data() { return &x; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &x; }
+		constexpr const T * data() const { return &x; }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_vec &v) {
 			return out << '(' << v.x << ", " << v.y << ", " << v.z << ')';
@@ -1156,11 +1153,11 @@ namespace cgra {
 		union{ T w; T a; T q; };
 
 		// default ctor
-		CGRA_CONSTEXPR_FUNCTION basic_vec() : x{}, y{}, z{}, w{} { }
+		constexpr basic_vec() : x{}, y{}, z{}, w{} { }
 		
 		// tagged ctor, used by cat
 		template <typename U1, typename U2, typename U3, typename U4>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_, U2 &&y_, U3 &&z_, U4 &&w_) :
+		constexpr explicit basic_vec(detail::vec_element_ctor_tag, U1 &&x_, U2 &&y_, U3 &&z_, U4 &&w_) :
 #ifdef __EDG__
 			// intellisense needs a hand here
 			x{ detail::constify(detail::forward_or_cast<T>(std::forward<U1>(x_))) },
@@ -1178,28 +1175,28 @@ namespace cgra {
 
 		// magic ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(ArgTs &&...args) : basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
+		constexpr explicit basic_vec(ArgTs &&...args) : basic_vec(detail::cat_impl<basic_vec>(std::forward<ArgTs>(args)...)) { }
 
 		// 1-arg magic ctor
 		template <typename VecT, typename = std::enable_if_t<detail::is_relatively_vector<basic_vec, VecT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_vec(VecT &&v) : basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
+		constexpr basic_vec(VecT &&v) : basic_vec(detail::cat_impl<basic_vec>(std::forward<VecT>(v))) { }
 
 		// scalar broadcast ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_vec(const T &t) : basic_vec(detail::constify(detail::repeat_vec<const T &, 4>(t)))	{ }
+		constexpr explicit basic_vec(const T &t) : basic_vec(detail::constify(detail::repeat_vec<const T &, 4>(t)))	{ }
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(i < 4);
 			return (&x)[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(i < 4);
 			return (&x)[i];
 		}
 
 		T * data() { return &x; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &x; }
+		constexpr const T * data() const { return &x; }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_vec &v) {
 			return out << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ')';
@@ -1220,40 +1217,40 @@ namespace cgra {
 		static constexpr size_t size = Cols * Rows;
 
 		// default ctor
-		CGRA_CONSTEXPR_FUNCTION basic_mat() { }
+		constexpr basic_mat() { }
 
 		// magic ctor
 		template <typename ...ArgTs, typename = std::enable_if_t<(sizeof...(ArgTs) >= 2)>>
-		CGRA_CONSTEXPR_FUNCTION explicit basic_mat(ArgTs &&...args) : m_data{ std::forward<ArgTs>(args)... } {}
+		constexpr explicit basic_mat(ArgTs &&...args) : m_data{ std::forward<ArgTs>(args)... } {}
 
 		// 1-arg magic ctor
 		template <typename MatT, typename = std::enable_if_t<detail::is_relatively_vector<basic_mat, MatT>::value>, typename = void>
-		CGRA_CONSTEXPR_FUNCTION basic_mat(MatT &&v) : m_data{ std::forward<MatT>(v) } {}
+		constexpr basic_mat(MatT &&v) : m_data{ std::forward<MatT>(v) } {}
 
 		// identity ctor
-		CGRA_CONSTEXPR_FUNCTION explicit basic_mat(const value_t &v_) {
+		constexpr explicit basic_mat(const value_t &v_) {
 			for (size_t i = 0; i < std::min(Cols, Rows); i++) {
 				(*this)[i][i] = v_;
 			}
 		}
 
-		CGRA_CONSTEXPR_FUNCTION auto & operator[](size_t i) {
+		constexpr auto & operator[](size_t i) {
 			assert(i < Cols);
 			return m_data[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const auto & operator[](size_t i) const {
+		constexpr const auto & operator[](size_t i) const {
 			assert(i < Cols);
 			return m_data[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION T * data() { return &m_data[0][0]; }
+		constexpr T * data() { return &m_data[0][0]; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &m_data[0][0]; }
+		constexpr const T * data() const { return &m_data[0][0]; }
 		
-		CGRA_CONSTEXPR_FUNCTION auto & as_vec() { return m_data; }
+		constexpr auto & as_vec() { return m_data; }
 
-		CGRA_CONSTEXPR_FUNCTION const auto & as_vec() const { return m_data; }
+		constexpr const auto & as_vec() const { return m_data; }
 
 		// stream insertion
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_mat &m) {
@@ -1285,18 +1282,18 @@ namespace cgra {
 		using basic_vec<T, 4>::z;
 		using basic_vec<T, 4>::w;
 
-		CGRA_CONSTEXPR_FUNCTION basic_quat() : basic_vec<T, 4>(0, 0, 0, 1) { }
+		constexpr basic_quat() : basic_vec<T, 4>(0, 0, 0, 1) { }
 
-		CGRA_CONSTEXPR_FUNCTION basic_quat(T _x, T _y, T _z, T _w) :  basic_vec<T, 4>(_x, _y, _z, _w) { }
+		constexpr basic_quat(T _x, T _y, T _z, T _w) :  basic_vec<T, 4>(_x, _y, _z, _w) { }
 
 		template <typename U>
-		CGRA_CONSTEXPR_FUNCTION basic_quat(const basic_quat<U>& q) : basic_vec<T, 4>(q.as_vec()) { }
+		constexpr basic_quat(const basic_quat<U>& q) : basic_vec<T, 4>(q.as_vec()) { }
 
-		CGRA_CONSTEXPR_FUNCTION basic_quat(const basic_vec<T, 3> &v, T _w) : basic_vec<T, 4>(v, _w) { }
+		constexpr basic_quat(const basic_vec<T, 3> &v, T _w) : basic_vec<T, 4>(v, _w) { }
 
-		CGRA_CONSTEXPR_FUNCTION basic_quat(const basic_vec<T, 3> &v1, const basic_vec<T, 1> &v2) :  basic_vec<T, 4>(v1, v2) { }
+		constexpr basic_quat(const basic_vec<T, 3> &v1, const basic_vec<T, 1> &v2) :  basic_vec<T, 4>(v1, v2) { }
 
-		CGRA_CONSTEXPR_FUNCTION basic_quat(const basic_vec<T, 4> &v) : basic_vec<T, 4>(v) { }
+		constexpr basic_quat(const basic_vec<T, 4> &v) : basic_vec<T, 4>(v) { }
 
 		// basic_mat<U, 3, 3> converter
 		template <typename U>
@@ -1346,23 +1343,23 @@ namespace cgra {
 			return m;
 		}
 
-		CGRA_CONSTEXPR_FUNCTION T & operator[](size_t i) {
+		constexpr T & operator[](size_t i) {
 			assert(i < 4);
 			return (&x)[i];
 		}
 
-		CGRA_CONSTEXPR_FUNCTION const T & operator[](size_t i) const {
+		constexpr const T & operator[](size_t i) const {
 			assert(i < 4);
 			return (&x)[i];
 		}
 
 		T * data() { return &x; }
 
-		CGRA_CONSTEXPR_FUNCTION const T * data() const { return &x; }
+		constexpr const T * data() const { return &x; }
 
 		basic_vec<T, 4> & as_vec() { return *this; }
 
-		CGRA_CONSTEXPR_FUNCTION const basic_vec<T, 4> & as_vec() const { return *this; }
+		constexpr const basic_vec<T, 4> & as_vec() const { return *this; }
 
 		inline friend std::ostream & operator<<(std::ostream &out, const basic_quat &v) {
 			return out << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ')';
@@ -1387,42 +1384,42 @@ namespace cgra {
 		namespace op {
 			struct neg {
 				template <typename T>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T &&t) const {
+				constexpr auto operator()(T &&t) const {
 					return -std::forward<T>(t);
 				}
 			};
 
 			struct add {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) + std::forward<T2>(t2);
 				}
 			};
 
 			struct sub {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) - std::forward<T2>(t2);
 				}
 			};
 
 			struct mul {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) * std::forward<T2>(t2);
 				}
 			};
 
 			struct div {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) / std::forward<T2>(t2);
 				}
 			};
 
 			struct mod {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) % std::forward<T2>(t2);
 				}
 			};
@@ -1430,35 +1427,35 @@ namespace cgra {
 
 			struct add_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) += std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct sub_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) -= std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct mul_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) *= std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct div_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) /= std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct mod_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) %= std::forward<T2>(t2); return{};
 				}
 			};
@@ -1466,28 +1463,28 @@ namespace cgra {
 			
 			struct lshift {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) << std::forward<T2>(t2);
 				}
 			};
 
 			struct rshift {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) >> std::forward<T2>(t2);
 				}
 			};
 
 			struct lshift_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) <<= std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct rshift_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) >>= std::forward<T2>(t2); return{};
 				}
 			};
@@ -1495,21 +1492,21 @@ namespace cgra {
 
 			struct logical_not {
 				template <typename T>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T &&t) const {
+				constexpr auto operator()(T &&t) const {
 					return !std::forward<T>(t);
 				}
 			};
 
 			struct logical_or {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) || std::forward<T2>(t2);
 				}
 			};
 
 			struct logical_and {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) && std::forward<T2>(t2);
 				}
 			};
@@ -1517,49 +1514,49 @@ namespace cgra {
 
 			struct bitwise_not {
 				template <typename T>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T &&t) const {
+				constexpr auto operator()(T &&t) const {
 					return ~std::forward<T>(t);
 				}
 			};
 
 			struct bitwise_or {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) | std::forward<T2>(t2);
 				}
 			};
 
 			struct bitwise_xor {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) ^ std::forward<T2>(t2);
 				}
 			};
 
 			struct bitwise_and {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) & std::forward<T2>(t2);
 				}
 			};
 
 			struct bitwise_or_assign  {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) |= std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct bitwise_xor_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) ^= std::forward<T2>(t2); return{};
 				}
 			};
 
 			struct bitwise_and_assign {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION nothing operator()(T1 &&t1, T2 &&t2) const {
+				constexpr nothing operator()(T1 &&t1, T2 &&t2) const {
 					std::forward<T1>(t1) &= std::forward<T2>(t2); return{};
 				}
 			};
@@ -1567,42 +1564,42 @@ namespace cgra {
 
 			struct equal {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) == std::forward<T2>(t2);
 				}
 			};
 
 			struct nequal {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) != std::forward<T2>(t2);
 				}
 			};
 
 			struct less {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) < std::forward<T2>(t2);
 				}
 			};
 
 			struct greater {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) > std::forward<T2>(t2);
 				}
 			};
 
 			struct less_equal {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) <= std::forward<T2>(t2);
 				}
 			};
 
 			struct greater_equal {
 				template <typename T1, typename T2>
-				CGRA_CONSTEXPR_FUNCTION auto operator()(T1 &&t1, T2 &&t2) const {
+				constexpr auto operator()(T1 &&t1, T2 &&t2) const {
 					return std::forward<T1>(t1) >= std::forward<T2>(t2);
 				}
 			};
@@ -2405,7 +2402,7 @@ namespace cgra {
 
 	template<typename T1, typename T2, size_t Cols, size_t Rows>
 	inline auto operator<(const basic_mat<T1, Cols, Rows> &lhs, const basic_mat<T2, Cols, Rows> &rhs) {
-		return lhs.as_vec() < rhs.as_vec();
+		return reinterpret_cast<const std::array<T1, N> &>(lhs.as_vec()) < reinterpret_cast<const std::array<T2, N> &>(lhs.as_vec());
 	}
 
 
@@ -2546,7 +2543,7 @@ namespace cgra {
 
 	template<typename T1, typename T2>
 	inline auto operator<(const basic_quat<T1> &lhs, const basic_quat<T2> &rhs) {
-		return lhs.as_vec() < rhs.as_vec();
+		return reinterpret_cast<const std::array<T1, 4> &>(lhs) < reinterpret_cast<const std::array<T2, 4> &>(rhs);
 	}
 
 
@@ -3778,8 +3775,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto rotate2(typename MatT::value_t v) {
-		static_assert(MatT::cols >= 2, "Matrix type must have 2 or more columns");
-		static_assert(MatT::rows >= 2, "Matrix type must have 2 or more rows");
+		static_assert(MatT::cols >= 2);
+		static_assert(MatT::rows >= 2);
 		MatT r{ 1 };
 		typename MatT::value_t cos_v = cos(v);
 		typename MatT::value_t sin_v = sin(v);
@@ -3792,8 +3789,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto scale2(typename MatT::value_t v) {
-		static_assert(MatT::cols >= 2, "Matrix type must have 2 or more columns");
-		static_assert(MatT::rows >= 2, "Matrix type must have 2 or more rows");
+		static_assert(MatT::cols >= 2);
+		static_assert(MatT::rows >= 2);
 		MatT r{ 1 };
 		r[0][0] = v;
 		r[1][1] = v;
@@ -3803,8 +3800,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto scale2(const basic_vec<typename MatT::value_t, 2> &v) {
-		static_assert(MatT::cols >= 2, "Matrix type must have 2 or more columns");
-		static_assert(MatT::rows >= 2, "Matrix type must have 2 or more rows");
+		static_assert(MatT::cols >= 2);
+		static_assert(MatT::rows >= 2);
 		MatT r{ 1 };
 		r[0][0] = v[0];
 		r[1][1] = v[1];
@@ -3813,8 +3810,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto translate2(typename MatT::value_t v) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 2, "Matrix type must have 2 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 2);
 		MatT r{ 1 };
 		r[3][0] = v;
 		r[3][1] = v;
@@ -3823,8 +3820,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto translate2(typename MatT::value_t vx, typename MatT::value_t vy) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 2, "Matrix type must have 2 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 2);
 		MatT r{ 1 };
 		r[3][0] = vx;
 		r[3][1] = vy;
@@ -3833,8 +3830,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto translate2(const basic_vec<typename MatT::value_t, 2> &v) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 2, "Matrix type must have 2 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 2);
 		MatT r{ 1 };
 		r[3][0] = v[0];
 		r[3][1] = v[1];
@@ -3855,16 +3852,16 @@ namespace cgra {
 		const basic_vec<typename MatT::value_t, 3> &lookAt,
 		const basic_vec<typename MatT::value_t, 3> &up
 	) {
-		static_assert(MatT::cols == 4, "Matrix type must have exactly 4 columns");
-		static_assert(MatT::rows == 4, "Matrix type must have exactly 4 rows");
+		static_assert(MatT::cols == 4);
+		static_assert(MatT::rows == 4);
 		basic_vec<typename MatT::value_t, 3> vz = normalize(eye - lookAt);
 		basic_vec<typename MatT::value_t, 3> vx = normalize(cross(up, vz));
 		basic_vec<typename MatT::value_t, 3> vy = normalize(cross(vz, vx));
 		MatT m{
-			basic_vec<T, 4>(vx, 0),
-			basic_vec<T, 4>(vy, 0),
-			basic_vec<T, 4>(vz, 0),
-			basic_vec<T, 4>(eye, 1) };
+			vector4<T>(vx, 0),
+			vector4<T>(vy, 0),
+			vector4<T>(vz, 0),
+			vector4<T>(eye, 1) };
 		return inverse(m);
 	}
 
@@ -3874,8 +3871,8 @@ namespace cgra {
 		typename MatT::value_t lx, typename MatT::value_t ly, typename MatT::value_t lz,
 		typename MatT::value_t ux, typename MatT::value_t uy, typename MatT::value_t uz
 	) {
-		static_assert(MatT::cols == 4, "Matrix type must have exactly 4 columns");
-		static_assert(MatT::rows == 4, "Matrix type must have exactly 4 rows");
+		static_assert(MatT::cols == 4);
+		static_assert(MatT::rows == 4);
 		return look_at( { ex, ey, ez }, { lx, ly, lz }, { ux, uy, uz } );
 	}
 
@@ -3889,8 +3886,8 @@ namespace cgra {
 		typename MatT::value_t zNear,
 		typename MatT::value_t zFar
 	) {
-		static_assert(MatT::cols == 4, "Matrix type must have exactly 4 columns");
-		static_assert(MatT::rows == 4, "Matrix type must have exactly 4 rows");
+		static_assert(MatT::cols == 4);
+		static_assert(MatT::rows == 4);
 		// typename MatT::value_t f = typename MatT::value_t(1) / (fovy / typename MatT::value_t(2)); // lol wtf, fast approximation
 		typename MatT::value_t f = cot(fovy / typename MatT::value_t(2)); // real equation
 		MatT r{ 0 };
@@ -3912,8 +3909,8 @@ namespace cgra {
 		typename MatT::value_t nearVal, 
 		typename MatT::value_t farVal
 	) {
-		static_assert(MatT::cols == 4, "Matrix type must have exactly 4 columns");
-		static_assert(MatT::rows == 4, "Matrix type must have exactly 4 rows");
+		static_assert(MatT::cols == 4);
+		static_assert(MatT::rows == 4);
 		MatT r{ 0 };
 		r[0][0] = typename MatT::value_t(2) / (right - left);
 		r[3][0] = (right + left) / (right - left);
@@ -3922,13 +3919,13 @@ namespace cgra {
 		r[2][2] = -typename MatT::value_t(2) / (farVal - nearVal);
 		r[3][2] = (farVal + nearVal) / (farVal - nearVal);
 		r[3][3] = typename MatT::value_t(1);
-		return r;
+		return m;
 	}
 
 	template <typename MatT>
 	inline auto rotate3x(typename MatT::value_t angle) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[1][1] = cos(angle);
 		r[2][1] = -sin(angle);
@@ -3939,8 +3936,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto rotate3y(typename MatT::value_t angle) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[0][0] = cos(angle);
 		r[2][0] = sin(angle);
@@ -3951,8 +3948,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto rotate3z(typename MatT::value_t angle) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[0][0] = cos(angle);
 		r[1][0] = -sin(angle);
@@ -3963,8 +3960,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto rotate3(const basic_quat<typename MatT::value_t> &q) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		basic_mat<typename MatT::value_t, 4, 4> rotation(q);
 		MatT r{ 1 };
 
@@ -3979,8 +3976,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto scale3(typename MatT::value_t v) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[0][0] = v;
 		r[1][1] = v;
@@ -3990,8 +3987,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto scale3(typename MatT::value_t vx, typename MatT::value_t vy, typename MatT::value_t vz) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[0][0] = vx;
 		r[1][1] = vy;
@@ -4002,8 +3999,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto scale3(const basic_vec<typename MatT::value_t, 3> &v) {
-		static_assert(MatT::cols >= 3, "Matrix type must have 3 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 3);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[0][0] = v[0];
 		r[1][1] = v[1];
@@ -4013,8 +4010,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto translate3(typename MatT::value_t v) {
-		static_assert(MatT::cols >= 4, "Matrix type must have 4 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 4);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[3][0] = v;
 		r[3][1] = v;
@@ -4024,8 +4021,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto translate3(typename MatT::value_t vx, typename MatT::value_t vy, typename MatT::value_t vz) {
-		static_assert(MatT::cols >= 4, "Matrix type must have 4 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 4);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[3][0] = vx;
 		r[3][1] = vy;
@@ -4036,8 +4033,8 @@ namespace cgra {
 
 	template <typename MatT>
 	inline auto translate3(const basic_vec<typename MatT::value_t, 3> &v) {
-		static_assert(MatT::cols >= 4, "Matrix type must have 4 or more columns");
-		static_assert(MatT::rows >= 3, "Matrix type must have 3 or more rows");
+		static_assert(MatT::cols >= 4);
+		static_assert(MatT::rows >= 3);
 		MatT r{ 1 };
 		r[3][0] = v[0];
 		r[3][1] = v[1];
@@ -4267,13 +4264,13 @@ namespace cgra {
 	namespace detail {
 		// A helper function used internally by zip_with
 		template <size_t I, typename F, typename ...ArgTs>
-		CGRA_CONSTEXPR_FUNCTION decltype(auto) zip_with_impl_impl(F f, ArgTs &&...args) {
+		constexpr decltype(auto) zip_with_impl_impl(F f, ArgTs &&...args) {
 			return f(std::forward<ArgTs>(args)[I]...);
 		}
 
 		// A helper function used internally by zip_with
 		template <typename ResT, typename F, size_t ...Is, typename ...ArgTs>
-		CGRA_CONSTEXPR_FUNCTION ResT zip_with_impl(F f, std::index_sequence<Is...>, ArgTs &&...args) {
+		constexpr ResT zip_with_impl(F f, std::index_sequence<Is...>, ArgTs &&...args) {
 			return ResT(zip_with_impl_impl<Is>(f, std::forward<ArgTs>(args)...)...);
 		}
 
@@ -4281,7 +4278,7 @@ namespace cgra {
 		template <size_t I, size_t N>
 		struct fold_impl {
 			template <typename F, typename T1, typename ArgT>
-			static CGRA_CONSTEXPR_FUNCTION decltype(auto) apply(F f, T1 &&t1, ArgT &&v) {
+			static constexpr decltype(auto) apply(F f, T1 &&t1, ArgT &&v) {
 				return fold_impl<I + 1, N>::apply(f, f(std::forward<T1>(t1), std::forward<ArgT>(v)[I]), std::forward<ArgT>(v));
 			}
 		};
@@ -4290,7 +4287,7 @@ namespace cgra {
 		template <size_t N>
 		struct fold_impl<N, N> {
 			template <typename F, typename T1, typename ArgT>
-			static CGRA_CONSTEXPR_FUNCTION decltype(auto) apply(F f, T1 &&t1, ArgT &&) {
+			static constexpr decltype(auto) apply(F f, T1 &&t1, ArgT &&) {
 				return std::forward<T1>(t1);
 			}
 		};
@@ -4299,7 +4296,7 @@ namespace cgra {
 	//TODO
 	// decsription
 	template <typename F, typename ...ArgTs>
-	CGRA_CONSTEXPR_FUNCTION auto zip_with(F f, ArgTs &&...args) {
+	constexpr auto zip_with(F f, ArgTs &&...args) {
 		using value_t = std::decay_t<decltype(f(std::forward<ArgTs>(args)[0]...))>;
 		using size = min_size<std::decay_t<ArgTs>...>;
 		using vec_t = basic_vec<value_t, size::value>;
@@ -4311,7 +4308,7 @@ namespace cgra {
 	// from vector a in left-to-right order starting with f(z, v[0])
 	// Typically T1 = T3 and T2 is a vector of some T
 	template <typename F, typename T1, typename ArgT>
-	CGRA_CONSTEXPR_FUNCTION decltype(auto) fold(F f, T1 &&t1, ArgT &&v) {
+	constexpr decltype(auto) fold(F f, T1 &&t1, ArgT &&v) {
 		return detail::fold_impl<0, std::decay_t<ArgT>::size>::apply(f, std::forward<T1>(t1), std::forward<ArgT>(v));
 	}
 
