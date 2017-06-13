@@ -200,13 +200,13 @@ void init_gfx() {
 		abort(); // Unrecoverable error
 	}
 
-	//// Force OpenGL to create a 3.3 core context
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	// Force OpenGL to create a 3.3 core context
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	//// Disallow legacy functionality (helps OS X work)
-	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	// Disallow legacy functionality (helps OS X work)
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	// Get the version for GLFW for later
 	int glfwMajor, glfwMinor, glfwRevision;
