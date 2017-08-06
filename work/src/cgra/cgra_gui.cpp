@@ -1,5 +1,5 @@
 
-#include "simple_gui.hpp"
+#include "cgra_gui.hpp"
 
 #include <iostream>
 
@@ -255,7 +255,7 @@ namespace cgra {
 
 	}
 
-	namespace SimpleGUI {
+	namespace gui {
 
 		void mouseButtonCallback(GLFWwindow*, int button, int action, int /*mods*/) {
 			if (action == GLFW_PRESS && button >= 0 && button < 3)

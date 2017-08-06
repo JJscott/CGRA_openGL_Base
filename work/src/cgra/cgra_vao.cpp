@@ -1,7 +1,7 @@
 
 #include <stdexcept>
 
-#include "simple_vao.hpp"
+#include "cgra_vao.hpp"
 
 
 using namespace std;

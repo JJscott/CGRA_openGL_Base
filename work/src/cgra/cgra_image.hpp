@@ -6,14 +6,13 @@
 #include <sstream>
 #include <vector>
 
-#include "../cgra_math.hpp"
-#include "../opengl.hpp"
-
-#include <string>
-#include <sstream>
 #include <stb_image.h>
 #include <stb_image_resize.h>
 #include <stb_image_write.h>
+
+#include "cgra_math.hpp"
+#include "../opengl.hpp"
+
 
 namespace cgra {
 
@@ -90,7 +89,7 @@ namespace cgra {
 			if (stbi_is_hdr(filename.c_str())) {
 				float *img = stbi_loadf(filename.c_str(), &w, &h, nullptr, N);
 				if (!img) {
-					std::cerr << "Failed to load image " << filename << " : " << stbi_failure_reason();
+					std::cerr << "Error: Failed to load image " << filename << " : " << stbi_failure_reason();
 					throw std::runtime_error("Failed to load image " + filename);
 				} else {
 					detail::stb_image_interpreter<T> interpreter;
@@ -103,7 +102,7 @@ namespace cgra {
 			} else {
 				unsigned char *img = stbi_load(filename.c_str(), &w, &h, nullptr, N);
 				if (!img) {
-					std::cerr << "Failed to load image " << filename << " : " << stbi_failure_reason();
+					std::cerr << "Error: Failed to load image " << filename << " : " << stbi_failure_reason();
 					throw std::runtime_error("Failed to load image " + filename);
 				} else {
 					detail::stb_image_interpreter<T> interpreter;
@@ -218,6 +217,4 @@ namespace cgra {
 			return img;
 		}
 	};
-
-
 }

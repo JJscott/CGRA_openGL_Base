@@ -1,38 +1,37 @@
 
 #pragma once
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <sstream>
 
 #include "../opengl.hpp"
 
 namespace cgra {
 
-
-	class shader_error : public std::runtime_error {
-	public:
-		explicit shader_error(const std::string &what_ = "Generic shader error.") : std::runtime_error(what_) { }
-	};
-
-	class shader_type_error : public shader_error {
-	public:
-		explicit shader_type_error(const std::string &what_ = "Bad shader type.") : shader_error(what_) { }
-	};
-
-	class shader_compile_error : public shader_error {
-	public:
-		explicit shader_compile_error(const std::string &what_ = "Shader compilation failed.") : shader_error(what_) { }
-	};
-
-	class shader_link_error : public shader_error {
-	public:
-		explicit shader_link_error(const std::string &what_ = "Shader program linking failed.") : shader_error(what_) { }
-	};
-
-
 	namespace detail {
+
+		class shader_error : public std::runtime_error {
+		public:
+			explicit shader_error(const std::string &what_ = "Generic shader error.") : std::runtime_error(what_) { }
+		};
+
+		class shader_type_error : public shader_error {
+		public:
+			explicit shader_type_error(const std::string &what_ = "Bad shader type.") : shader_error(what_) { }
+		};
+
+		class shader_compile_error : public shader_error {
+		public:
+			explicit shader_compile_error(const std::string &what_ = "Shader compilation failed.") : shader_error(what_) { }
+		};
+
+		class shader_link_error : public shader_error {
+		public:
+			explicit shader_link_error(const std::string &what_ = "Shader program linking failed.") : shader_error(what_) { }
+		};
 
 		inline void printShaderInfoLog(GLuint obj) {
 			int infologLength = 0;
@@ -41,7 +40,7 @@ namespace cgra {
 			if (infologLength > 1) {
 				std::vector<char> infoLog(infologLength);
 				glGetShaderInfoLog(obj, infologLength, &charsWritten, &infoLog[0]);
-				std::cout << "SimpleShader : " << "SHADER :\n" << &infoLog[0] << std::endl;
+				std::cout << "CGRA Shader : " << "SHADER :\n" << &infoLog[0] << std::endl;
 			}
 		}
 
@@ -52,7 +51,7 @@ namespace cgra {
 			if (infologLength > 1) {
 				std::vector<char> infoLog(infologLength);
 				glGetProgramInfoLog(obj, infologLength, &charsWritten, &infoLog[0]);
-				std::cout << "SimpleShader : " << "PROGRAM :\n" << &infoLog[0] << std::endl;
+				std::cout << "CGRA Shader : " << "PROGRAM :\n" << &infoLog[0] << std::endl;
 			}
 		}
 
@@ -98,7 +97,7 @@ namespace cgra {
 		}
 
 		detail::linkShaderProgram(prog);
-		std::cout << "SimpleShader : " << "Shader program compiled and linked successfully" << std::endl;
+		std::cout << "CGRA Shader : " << "Shader program compiled and linked successfully" << std::endl;
 		return prog;
 	}
 
@@ -152,7 +151,7 @@ namespace cgra {
 		}
 
 		detail::linkShaderProgram(prog);
-		std::cout << "SimpleShader : " << "Shader program compiled and linked successfully" << std::endl;
+		std::cout << "CGRA Shader : " << "Shader program compiled and linked successfully" << std::endl;
 		return prog;
 	}
 

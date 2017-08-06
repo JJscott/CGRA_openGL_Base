@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "../cgra_math.hpp"
+#include "cgra_math.hpp"
 #include "../opengl.hpp"
 
 namespace cgra {

@@ -1,12 +1,17 @@
 
 # Source files
 set(sources	
-	"simple_gui.hpp"
-	"simple_gui.cpp"
-	"simple_image.hpp"
-	"simple_shader.hpp"
-	"simple_vao.hpp"
-	"simple_vao.cpp"
+	"cgra_gui.hpp"
+	"cgra_gui.cpp"
+	
+	"cgra_image.hpp"
+
+	"cgra_math.hpp"
+
+	"cgra_shader.hpp"
+
+	"cgra_vao.hpp"
+	"cgra_vao.cpp"
 )
 
 # Add these sources to the project target

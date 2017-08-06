@@ -7,9 +7,12 @@
 # list your source files here #
 # --------------------------- #
 SET(sources
-	"main.cpp"
-	"cgra_math.hpp"
+	"application.hpp"
+	"application.cpp"
+	
 	"opengl.hpp"
+
+	"main.cpp"
 )
 
 # Add executable target and link libraries
@@ -18,7 +21,7 @@ add_executable(${CGRA_PROJECT} ${sources})
 # ----TODO--------------------- #
 # list your subdirectories here #
 # ----------------------------- #
-add_subdirectory(simple)
+add_subdirectory(cgra)
 
 
 
