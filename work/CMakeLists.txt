@@ -47,6 +47,7 @@ include_directories("${PROJECT_SOURCE_DIR}/ext/glfw/include")
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/glew-1.10.0")
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/stb")
 add_subdirectory("${PROJECT_SOURCE_DIR}/ext/imgui")
+include_directories("${PROJECT_SOURCE_DIR}/src") # Add source to include directory
 
 
 

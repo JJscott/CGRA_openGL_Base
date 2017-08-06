@@ -1,17 +1,20 @@
 
 #pragma once
 
+// std
 #include <chrono>
 #include <string>
 #include <sstream>
 #include <vector>
 
+// stb
 #include <stb_image.h>
 #include <stb_image_resize.h>
 #include <stb_image_write.h>
 
+// project
 #include "cgra_math.hpp"
-#include "../opengl.hpp"
+#include <opengl.hpp>
 
 
 namespace cgra {

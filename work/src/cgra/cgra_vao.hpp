@@ -1,10 +1,12 @@
 
 #pragma once
 
+// std
 #include <vector>
 
+// project
 #include "cgra_math.hpp"
-#include "../opengl.hpp"
+#include <opengl.hpp>
 
 namespace cgra {
 

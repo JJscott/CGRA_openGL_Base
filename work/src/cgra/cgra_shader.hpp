@@ -1,13 +1,15 @@
 
 #pragma once
 
+// std
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "../opengl.hpp"
+// project
+#include <opengl.hpp>
 
 namespace cgra {
 
