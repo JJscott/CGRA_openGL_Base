@@ -110,7 +110,11 @@ void Application::render(int width, int height) {
 	// 
 	mat4 proj = perspective<mat4>(1.0, float(width) / height, 0.1, 100.0);
 	mat4 view = translate3<mat4>(0, 0, -5) * rotate3x<mat4>(m_pitch) * rotate3y<mat4>(m_yaw);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
+	mat4 model(1); // identity
+
+	mat4 modelview = view * model;
+
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, modelview.data());
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.data());
 
 
