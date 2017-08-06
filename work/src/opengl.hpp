@@ -5,6 +5,8 @@
 //
 //----------------------------------------------------------------------------
 
+#pragma once
+
 // include glew.h before (instead of) gl.h, or anything that includes gl.h
 // glew.h replaces gl.h and sets up OpenGL functions in a cross-platform manner
 #include <GL/glew.h>
