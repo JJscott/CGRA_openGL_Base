@@ -23,8 +23,10 @@ Application::Application() {
 void Application::cursorPosCallback(double xpos, double ypos) {
 	// do something
 	if (m_leftMouseDown) {
-		m_yaw += radians(m_mousePosition.x - xpos);
-		m_pitch += radians(m_mousePosition.y - ypos);
+		m_pitch = clamp(m_pitch + radians(ypos - m_mousePosition.y), -pi / 2, pi/2);
+		m_yaw += radians(xpos - m_mousePosition.x);
+		if (m_yaw > pi) m_yaw -= 2*pi;
+		else if (m_yaw < -pi) m_yaw += 2*pi;
 	}
 	m_mousePosition = vec2(xpos, ypos);
 }
@@ -107,7 +109,7 @@ void Application::render(int width, int height) {
 	// Set up the matricies / uniforms
 	// 
 	mat4 proj = perspective<mat4>(1.0, float(width) / height, 0.1, 100.0);
-	mat4 view = translate3<mat4>(0, 0, -5) * rotate3x<mat4>(-m_pitch) * rotate3y<mat4>(-m_yaw);
+	mat4 view = translate3<mat4>(0, 0, -5) * rotate3x<mat4>(m_pitch) * rotate3y<mat4>(m_yaw);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.data());
 
@@ -122,6 +124,8 @@ void Application::render(int width, int height) {
 
 void Application::renderGUI() {
 	ImGui::Begin("Debug");
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::SliderFloat("Pitch", &m_pitch, -pi/2, pi/2);
+	ImGui::SliderFloat("Yaw", &m_yaw, -pi, pi);
 	ImGui::End();
 }
