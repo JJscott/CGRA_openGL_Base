@@ -40,13 +40,15 @@ namespace cgra {
 				const std::vector<unsigned int> &indices = {}
 			);
 
+			~mesh() { } // not needed, but the copy ctors are (because of gl_object)
+
 			// copy ctors
 			mesh(const mesh &);
 			mesh & operator=(const mesh &);
 
 			// move ctors
-			mesh(mesh &&other) noexcept;
-			mesh & operator=(mesh &&other) noexcept;
+			mesh(mesh &&other) = default;
+			mesh & operator=(mesh &&other) = default;
 
 			void reupload();
 

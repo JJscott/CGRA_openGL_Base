@@ -7,8 +7,8 @@
 
 #include "cgra/cgra_gui.hpp"
 #include "cgra/cgra_image.hpp"
+#include "cgra/cgra_mesh.hpp"
 #include "cgra/cgra_shader.hpp"
-#include "cgra/cgra_vao.hpp"
 
 
 using namespace std;

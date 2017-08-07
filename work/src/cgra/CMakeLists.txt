@@ -8,10 +8,10 @@ set(sources
 
 	"cgra_math.hpp"
 
-	"cgra_shader.hpp"
+	"cgra_mesh.hpp"
+	"cgra_mesh.cpp"
 
-	"cgra_vao.hpp"
-	"cgra_vao.cpp"
+	"cgra_shader.hpp"
 )
 
 # Add these sources to the project target

@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 // project
-#include "cgra_vao.hpp"
+#include "cgra_mesh.hpp"
 
 
 using namespace std;
@@ -37,9 +37,7 @@ int primitive_count(int index_count, GLuint mode) {
 	}
 }
 
-
 namespace cgra {
-
 
 	mesh::mesh(GLenum mode, const std::vector<vertex> &vertices, const std::vector<unsigned int> &indices)
 		: m_mode(mode), m_vertices(vertices), m_indices(indices) { }
@@ -49,6 +47,10 @@ namespace cgra {
 		: m_vertices(other.m_vertices), m_indices(other.m_indices), m_mode(other.m_mode), m_wire_frame(other.m_wire_frame) { }
 
 	mesh & mesh::operator=(const mesh &other) {
+		m_vao = {};
+		m_vbo = {};
+		m_ibo = {};
+
 		m_vertices = other.m_vertices;
 		m_indices = other.m_indices;
 
@@ -57,37 +59,6 @@ namespace cgra {
 
 		return *this;
 	}
-
-	// move ctors
-	// TODO intializer list?
-	mesh::mesh(mesh &&other) noexcept {
-		m_vao = std::move(other.m_vao);
-		m_vbo = std::move(other.m_vbo);
-		m_ibo = std::move(other.m_ibo);
-		m_primitive_count = other.m_primitive_count;
-
-		m_vertices = std::move(other.m_vertices);
-		m_indices = std::move(other.m_indices);
-
-		m_mode = other.m_mode;
-		m_wire_frame = other.m_wire_frame;
-	}
-
-	mesh & mesh::operator=(mesh &&other) noexcept {
-		m_vao = std::move(other.m_vao);
-		m_vbo = std::move(other.m_vbo);
-		m_ibo = std::move(other.m_ibo);
-		m_primitive_count = other.m_primitive_count;
-
-		m_vertices = std::move(other.m_vertices);
-		m_indices = std::move(other.m_indices);
-
-		m_mode = other.m_mode;
-		m_wire_frame = other.m_wire_frame;
-
-		return *this;
-	}
-
 
 	void mesh::reupload() {
 
@@ -179,8 +150,6 @@ namespace cgra {
 		// Bind our VAO which sets up all our buffers and data for us
 		glBindVertexArray(m_vao);
 		// Tell opengl to draw our VAO using the draw mode and how many verticies to render
-		//glDrawArrays(m_mode, 0, m_primitive_count); // without indices
-		//glDrawArrays(m_mode, 0, m_indices.size()); // without indices
 		glDrawElements(m_mode, m_indices.size(), GL_UNSIGNED_INT, 0); // with indices
 	}
 }
