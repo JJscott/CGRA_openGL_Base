@@ -68,30 +68,26 @@ void Application::render(int width, int height) {
 		texture = img.make_texture();
 	}
 
-	static SimpleVAO *geometry = nullptr;
-	if (geometry == nullptr) {
-		geometry = new SimpleVAO();
-		geometry->begin(GL_TRIANGLES);
+	static mesh geometry(GL_TRIANGLES);
 
-		geometry->set_normal(0, 0, 1);
+	if (geometry.m_indices.empty()) {
 
-		// first triangle
-		geometry->set_texcoord(0, 0);
-		geometry->add_vertex(-1, -1, 0);
-		geometry->set_texcoord(1, 0);
-		geometry->add_vertex(1, -1, 0);
-		geometry->set_texcoord(0, 1);
-		geometry->add_vertex(-1, 1, 0);
+		vector<vertex> vdata = {
+			vertex(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
+			vertex(vec3( 1, -1, 0), vec3(0, 0, 1), vec2(1, 0)),
+			vertex(vec3( 1,  1, 0), vec3(0, 0, 1), vec2(1, 1)),
+			vertex(vec3(-1,  1, 0), vec3(0, 0, 1), vec2(0, 1))
+		};
 
-		// second triangle
-		geometry->set_texcoord(1, 1);
-		geometry->add_vertex(1, 1, 0);
-		geometry->set_texcoord(1, 0);
-		geometry->add_vertex(1, -1, 0);
-		geometry->set_texcoord(0, 1);
-		geometry->add_vertex(-1, 1, 0);
+		vector<unsigned int> idata = {
+			0, 1, 2,
+			3, 0, 2
+		};
 
-		geometry->end();
+		geometry.m_vertices = vdata;
+		geometry.m_indices = idata;
+
+		geometry.reupload();
 	}
 
 
@@ -118,7 +114,7 @@ void Application::render(int width, int height) {
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.data());
 
 
-	geometry->draw();
+	geometry.draw();
 
 
 	glUseProgram(0); // Unbind our shader

@@ -10,45 +10,47 @@
 
 namespace cgra {
 
-	class SimpleVAO {
+	struct vertex {
+		vec3 pos;
+		vec3 norm;
+		vec2 uv;
+		vertex(vec3 p = {}, vec3 n = {}, vec2 t = {})
+			: pos(p), norm(n), uv(t){ }
+		vertex(vec3 p, vec2 t)
+			: pos(p), norm(0, 0, 1), uv(t) { }
+	};
+
+	class mesh {
 		private:
-			std::vector<float> m_positions;
-			std::vector<float> m_normals;
-			std::vector<float> m_uvs;
-
-			basic_vec<float, 3> m_currentNormal = basic_vec<float, 3>(0,0,1);
-			basic_vec<float, 2> m_currentUV = basic_vec<float, 2>(0,0);
-
-			GLuint m_vao = 0;
-			GLuint m_vbo_pos = 0;
-			GLuint m_vbo_norm = 0;
-			GLuint m_vbo_uv = 0;
-
-			bool m_begin = false;
-			GLenum m_mode = 0;
-			GLuint m_primitive_count = 0;
+			gl_object m_vao;
+			gl_object m_vbo;
+			gl_object m_ibo;
+			int m_primitive_count;
 
 		public:
-			SimpleVAO();
-			~SimpleVAO();
 
-			void begin(GLenum mode);
-			void end();
+			std::vector<vertex> m_vertices;
+			std::vector<unsigned int> m_indices;
+			GLenum m_mode = 0;
+			bool m_wire_frame = false;
+
+			mesh(
+				GLenum mode = GL_TRIANGLES,
+				const std::vector<vertex> &vertices = {},
+				const std::vector<unsigned int> &indices = {}
+			);
+
+			// copy ctors
+			mesh(const mesh &);
+			mesh & operator=(const mesh &);
+
+			// move ctors
+			mesh(mesh &&other) noexcept;
+			mesh & operator=(mesh &&other) noexcept;
+
+			void reupload();
 
 			void draw();
-
-			void set_normal(float x, float y, float z);
-			void set_normal(float *v);
-			void set_normal(basic_vec<float, 3> v);
-
-			void set_texcoord(float u, float v);
-			void set_texcoord(float *v);
-			void set_texcoord(basic_vec<float, 2> v);
-
-			void add_vertex(float x, float y, float z);
-			void add_vertex(float *v);
-			void add_vertex(basic_vec<float, 3> v);
-
 	};
 
 }

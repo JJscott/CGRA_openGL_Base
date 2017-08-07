@@ -8,177 +8,176 @@
 
 using namespace std;
 
+// helper function
+// returns the correct number of primitives given vertex index count and draw mode
+int primitive_count(int index_count, GLuint mode) {
+	// Set primitive count
+	int patch_size;
+	switch (mode) {
+	case GL_POINTS:
+	case GL_LINE_LOOP:
+		return index_count;
+	case GL_LINES:
+	case GL_LINES_ADJACENCY:
+	case GL_LINE_STRIP:
+	case GL_LINE_STRIP_ADJACENCY:
+		return index_count - 1;
+	case GL_TRIANGLES:
+	case GL_TRIANGLES_ADJACENCY:
+		return index_count / 3;
+	case GL_TRIANGLE_FAN:
+	case GL_TRIANGLE_STRIP:
+	case GL_TRIANGLE_STRIP_ADJACENCY:
+		return index_count - 2;
+	case GL_PATCHES:
+		glGetIntegerv(GL_PATCH_VERTICES, &patch_size);
+		return index_count / patch_size;
+	default:
+		throw runtime_error("Error: GLenum 'mode' is invalid");
+	}
+}
+
 
 namespace cgra {
 
 
-	SimpleVAO::SimpleVAO() { }
+	mesh::mesh(GLenum mode, const std::vector<vertex> &vertices, const std::vector<unsigned int> &indices)
+		: m_mode(mode), m_vertices(vertices), m_indices(indices) { }
+
+	// copy ctors
+	mesh::mesh(const mesh &other)
+		: m_vertices(other.m_vertices), m_indices(other.m_indices), m_mode(other.m_mode), m_wire_frame(other.m_wire_frame) { }
+
+	mesh & mesh::operator=(const mesh &other) {
+		m_vertices = other.m_vertices;
+		m_indices = other.m_indices;
+
+		m_mode = other.m_mode;
+		m_wire_frame = other.m_wire_frame;
+
+		return *this;
+	}
+
+	// move ctors
+	// TODO intializer list?
+	mesh::mesh(mesh &&other) noexcept {
+		m_vao = std::move(other.m_vao);
+		m_vbo = std::move(other.m_vbo);
+		m_ibo = std::move(other.m_ibo);
+		m_primitive_count = other.m_primitive_count;
+
+		m_vertices = std::move(other.m_vertices);
+		m_indices = std::move(other.m_indices);
+
+		m_mode = other.m_mode;
+		m_wire_frame = other.m_wire_frame;
+	}
+
+	mesh & mesh::operator=(mesh &&other) noexcept {
+		m_vao = std::move(other.m_vao);
+		m_vbo = std::move(other.m_vbo);
+		m_ibo = std::move(other.m_ibo);
+		m_primitive_count = other.m_primitive_count;
+
+		m_vertices = std::move(other.m_vertices);
+		m_indices = std::move(other.m_indices);
+
+		m_mode = other.m_mode;
+		m_wire_frame = other.m_wire_frame;
+
+		return *this;
+	}
 
 
-	SimpleVAO::~SimpleVAO() {
-		if (m_vao != 0) {
-			glDeleteBuffers(1, &m_vbo_pos);
-			glDeleteBuffers(1, &m_vbo_norm);
-			glDeleteBuffers(1, &m_vbo_uv);
-			glDeleteVertexArrays(1, &m_vao);
+	void mesh::reupload() {
+
+		// Create Vertex Array Object (VAO) that can hold information
+		// about how the VBOs should be set up
+
+		// Create a VAO, uses glGenVertexArrays(1, &m_vao);
+		if (!m_vao) m_vao = gl_object::gen_vertex_array();
+
+		// Create a vertex attribute buffer in GPU memory, uses glGenBuffers(1, &m_vbo);
+		if (!m_vbo) m_vbo = gl_object::gen_buffer();
+
+		// Create an index buffer in GPU memory, uses glGenBuffers(1, &m_ibo);
+		if (!m_ibo) m_ibo = gl_object::gen_buffer();
+
+		// Compile the vertex data into a single vector
+		size_t vertex_size = 3 + 3 + 2; // pos, norm, uv
+		std::vector<float> vertex_data(m_vertices.size() * vertex_size);
+		for (size_t i = 0; i < m_vertices.size(); ++i) {
+			// positions
+			vertex_data[(i*vertex_size) + 0] = m_vertices[i].pos[0];
+			vertex_data[(i*vertex_size) + 1] = m_vertices[i].pos[1];
+			vertex_data[(i*vertex_size) + 2] = m_vertices[i].pos[2];
+			// normals
+			vertex_data[(i*vertex_size) + 3] = m_vertices[i].norm[0];
+			vertex_data[(i*vertex_size) + 4] = m_vertices[i].norm[1];
+			vertex_data[(i*vertex_size) + 5] = m_vertices[i].norm[2];
+			// uvs
+			vertex_data[(i*vertex_size) + 6] = m_vertices[i].uv[0];
+			vertex_data[(i*vertex_size) + 7] = m_vertices[i].uv[1];
 		}
+
+
+
+		// Tell opengl that we are going to work with this VAO now
+		glBindVertexArray(m_vao);
+
+		
+
+		// VBO
+		//
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+		// Pass through ALL the data giving it the size (in bytes)
+		// and a pointer to the data (in this case, the address of the first element in the vector)
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), &vertex_data[0], GL_STATIC_DRAW);
+
+		// This buffer will use location=0 when we use our VAO
+		glEnableVertexAttribArray(0);
+		// Tell opengl how to treat data in location=0
+		// the data is treated in lots of 3 (3 floats = vec3)
+		// the other arguments are standard
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_size, (void*)(0));
+
+		// Do the same thing for Normals but bind it to location=1
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_size, (void*)(sizeof(float) * 3));
+
+		// Do the same thing for UVs but bind it to location=2
+		glEnableVertexAttribArray(2);
+		// Also, we are setting up an array for lots of 2 floats (vec2) instead of 3 floats (vec3)
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_size, (void*)(sizeof(float) * 6));
+
+
+
+		// IBO
+		//
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_indices.size(), &m_indices[0], GL_STATIC_DRAW);
+
+		// Recalcuate number of primitives based on index
+		m_primitive_count = primitive_count(m_indices.size(), m_mode);
+
+		// Clean up by binding 0
+		// not nessesary, but good practice
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
 	}
 
 
-	void SimpleVAO::begin(GLenum mode) {
-		if (m_begin) throw runtime_error("begin() can not be called twice");
-		if (m_vao != 0) throw runtime_error("begin() can not be called after end()");
+	void mesh::draw() {
 
-		m_mode = mode;
-		m_begin = true;
-	}
+		if (!m_vao) reupload();
 
-
-	void SimpleVAO::end() {
-		if (m_vao == 0) {
-			if (!m_begin) throw runtime_error("begin() must be called before end()");
-			// Create Vertex Array Object (VAO) that can hold information
-			// about how the VBOs should be set up
-			glGenVertexArrays(1, &m_vao);
-			// Tell opengl that we are going to work with this VAO now
-			glBindVertexArray(m_vao);
-
-
-			// Create a buffer in GPU memory, its ID is put into m_vbo_pos
-			glGenBuffers(1, &m_vbo_pos);
-			// Tell openGL that we are going to work on our buffer now
-			glBindBuffer(GL_ARRAY_BUFFER, m_vbo_pos);
-			// This buffer will use location=0 when we use our VAO
-			glEnableVertexAttribArray(0);
-			// Pass through ALL the data giving it the size (in bytes)
-			// and a pointer to the data (in this case, the address of the first element in the vector)
-			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_positions.size(), &m_positions[0], GL_STATIC_DRAW);
-			// Tell opengl how to treat data in location=0
-			// the data is treated in lots of 3 (3 floats = vec3)
-			// the other arguments are standard
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-
-			// Do the same thing for Normals but bind it to location=1
-			glGenBuffers(1, &m_vbo_norm);
-			glBindBuffer(GL_ARRAY_BUFFER, m_vbo_norm);
-			glEnableVertexAttribArray(1);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_normals.size(), &m_normals[0], GL_STATIC_DRAW);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-
-			// Do the same thing for UVs but bind it to location=2
-			glGenBuffers(1, &m_vbo_uv);
-			glBindBuffer(GL_ARRAY_BUFFER, m_vbo_uv);
-			glEnableVertexAttribArray(2);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_uvs.size(), &m_uvs[0], GL_STATIC_DRAW);
-			// Also, we are setting up an array for lots of 2 floats (vec2) instead of 3 floats (vec3)
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-
-			// Clean up by binding 0
-			// not nessesary, but good practice
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glBindVertexArray(0);
-
-
-			// Set primitive count
-			int patch_size;
-			switch (m_mode) {
-			case GL_POINTS:
-			case GL_LINE_LOOP:
-				m_primitive_count = m_positions.size(); break;
-			case GL_LINES:
-			case GL_LINES_ADJACENCY:
-			case GL_LINE_STRIP:
-			case GL_LINE_STRIP_ADJACENCY:
-				m_primitive_count = m_positions.size() - 1; break;
-			case GL_TRIANGLES:
-			case GL_TRIANGLES_ADJACENCY:
-				m_primitive_count = m_positions.size() / 3; break;
-			case GL_TRIANGLE_FAN:
-			case GL_TRIANGLE_STRIP:
-			case GL_TRIANGLE_STRIP_ADJACENCY:
-				m_primitive_count = m_positions.size() - 2; break;
-			case GL_PATCHES:
-				glGetIntegerv(GL_PATCH_VERTICES, &patch_size);
-				m_primitive_count = m_positions.size() / patch_size; break;
-			default:
-				throw runtime_error("GLenum 'mode' is invalid");
-			}
-
-			// Clean up the data
-			vector<float>().swap(m_positions);
-			vector<float>().swap(m_normals);
-			vector<float>().swap(m_uvs);
-
-		}
-		else {
-			throw runtime_error("end() can not be called twice");
-		}
-	}
-
-
-	void SimpleVAO::draw() {
-		if (m_vao != 0) {
-			// Bind our VAO which sets up all our buffers and data for us
-			glBindVertexArray(m_vao);
-			// Tell opengl to draw our VAO using the draw mode and how many verticies to render
-			glDrawArrays(m_mode, 0, m_primitive_count);
-		} else {
-			throw runtime_error("Can not draw uninitialized VAO");
-		}
-	}
-
-
-	void SimpleVAO::set_normal(float x, float y, float z) {
-		m_currentNormal = basic_vec<float, 3>(x, y, z);
-	}
-
-	void SimpleVAO::set_normal(float *v) {
-		m_currentNormal = basic_vec<float, 3>(v[0], v[1], v[2]);
-	}
-
-	void SimpleVAO::set_normal(basic_vec<float, 3> v) {
-		m_currentNormal = v;
-	}
-
-
-
-	void SimpleVAO::set_texcoord(float u, float v) {
-		m_currentUV = basic_vec<float, 2>(u, v);
-	}
-
-	void SimpleVAO::set_texcoord(float *v) {
-		m_currentUV = basic_vec<float, 2>(v[0], v[1]);
-	}
-
-	void SimpleVAO::set_texcoord(basic_vec<float, 2> v) {
-		m_currentUV = v;
-	}
-
-
-
-	void SimpleVAO::add_vertex(float x, float y, float z) {
-		if (!m_begin) throw runtime_error("Can not add vertex before calling begin()");
-		if (m_vao != 0) throw runtime_error("Can not add vertex after calling end()");
-		m_positions.push_back(x);
-		m_positions.push_back(y);
-		m_positions.push_back(z);
-
-		m_normals.push_back(m_currentNormal.x);
-		m_normals.push_back(m_currentNormal.y);
-		m_normals.push_back(m_currentNormal.z);
-
-		m_uvs.push_back(m_currentUV.x);
-		m_uvs.push_back(m_currentUV.y);
-	}
-
-	void SimpleVAO::add_vertex(float *v) {
-		add_vertex(v[0], v[1], v[2]);
-	}
-
-	void SimpleVAO::add_vertex(basic_vec<float, 3> v) {
-		add_vertex(v.x, v.y, v.z);
+		// Set wireframe or fill polygon mode
+		glPolygonMode(GL_FRONT_AND_BACK, (m_wire_frame) ? GL_LINE : GL_FILL);
+		// Bind our VAO which sets up all our buffers and data for us
+		glBindVertexArray(m_vao);
+		// Tell opengl to draw our VAO using the draw mode and how many verticies to render
+		// glDrawArrays(m_mode, 0, m_primitive_count); // without indices
+		glDrawElements(m_mode, m_indices.size(), GL_UNSIGNED_INT, 0); // with indices
 	}
 }
