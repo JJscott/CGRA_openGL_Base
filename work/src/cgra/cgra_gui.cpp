@@ -1,7 +1,9 @@
 
-#include "cgra_gui.hpp"
-
+// std
 #include <iostream>
+
+// project
+#include "cgra_gui.hpp"
 
 using namespace std;
 

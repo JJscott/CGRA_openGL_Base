@@ -58,11 +58,13 @@ public:
 		return *this;
 	}
 
+	// implicit GLuint converter
 	// returns the OpenGL identifier for this object
 	operator GLuint() const noexcept {
 		return m_id;
 	}
 
+	// explicit boolean converter
 	// true IFF identifier is not zero
 	explicit operator bool() const noexcept {
 		return m_id;
@@ -73,6 +75,7 @@ public:
 		return !m_id;
 	}
 
+	// destructor 
 	~gl_object() {
 		destroy();
 	}
