@@ -110,8 +110,8 @@ void Application::render(int width, int height) {
 
 	mat4 modelview = view * model;
 
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, modelview.data());
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, view.data());
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, modelview.data());
 
 
 	geometry.draw();

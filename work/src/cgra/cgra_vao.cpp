@@ -92,7 +92,7 @@ namespace cgra {
 	void mesh::reupload() {
 
 		// Create Vertex Array Object (VAO) that can hold information
-		// about how the VBOs should be set up
+		// about how the VBOs are set up
 
 		// Create a VAO, uses glGenVertexArrays(1, &m_vao);
 		if (!m_vao) m_vao = gl_object::gen_vertex_array();
@@ -104,25 +104,26 @@ namespace cgra {
 		if (!m_ibo) m_ibo = gl_object::gen_buffer();
 
 		// Compile the vertex data into a single vector
-		size_t vertex_size = 3 + 3 + 2; // pos, norm, uv
-		std::vector<float> vertex_data(m_vertices.size() * vertex_size);
+		size_t vertex_length = 3 + 3 + 2; // pos, norm, uv (8 floats)
+		std::vector<float> vertex_data(m_vertices.size() * vertex_length);
 		for (size_t i = 0; i < m_vertices.size(); ++i) {
 			// positions
-			vertex_data[(i*vertex_size) + 0] = m_vertices[i].pos[0];
-			vertex_data[(i*vertex_size) + 1] = m_vertices[i].pos[1];
-			vertex_data[(i*vertex_size) + 2] = m_vertices[i].pos[2];
+			vertex_data[(i*vertex_length) + 0] = m_vertices[i].pos[0];
+			vertex_data[(i*vertex_length) + 1] = m_vertices[i].pos[1];
+			vertex_data[(i*vertex_length) + 2] = m_vertices[i].pos[2];
 			// normals
-			vertex_data[(i*vertex_size) + 3] = m_vertices[i].norm[0];
-			vertex_data[(i*vertex_size) + 4] = m_vertices[i].norm[1];
-			vertex_data[(i*vertex_size) + 5] = m_vertices[i].norm[2];
+			vertex_data[(i*vertex_length) + 3] = m_vertices[i].norm[0];
+			vertex_data[(i*vertex_length) + 4] = m_vertices[i].norm[1];
+			vertex_data[(i*vertex_length) + 5] = m_vertices[i].norm[2];
 			// uvs
-			vertex_data[(i*vertex_size) + 6] = m_vertices[i].uv[0];
-			vertex_data[(i*vertex_size) + 7] = m_vertices[i].uv[1];
+			vertex_data[(i*vertex_length) + 6] = m_vertices[i].uv[0];
+			vertex_data[(i*vertex_length) + 7] = m_vertices[i].uv[1];
 		}
 
 
 
-		// Tell opengl that we are going to work with this VAO now
+		// VAO
+		//
 		glBindVertexArray(m_vao);
 
 		
@@ -139,16 +140,16 @@ namespace cgra {
 		// Tell opengl how to treat data in location=0
 		// the data is treated in lots of 3 (3 floats = vec3)
 		// the other arguments are standard
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_size, (void*)(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_length, (void*)(0));
 
 		// Do the same thing for Normals but bind it to location=1
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_size, (void*)(sizeof(float) * 3));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_length, (void*)(sizeof(float) * 3));
 
 		// Do the same thing for UVs but bind it to location=2
-		glEnableVertexAttribArray(2);
 		// Also, we are setting up an array for lots of 2 floats (vec2) instead of 3 floats (vec3)
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_size, (void*)(sizeof(float) * 6));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_length, (void*)(sizeof(float) * 6));
 
 
 
@@ -157,14 +158,15 @@ namespace cgra {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_indices.size(), &m_indices[0], GL_STATIC_DRAW);
 
+
+
 		// Recalcuate number of primitives based on index
 		m_primitive_count = primitive_count(m_indices.size(), m_mode);
 
-		// Clean up by binding 0
-		// not nessesary, but good practice
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		// Clean up by binding 0, good practice
+		// the GL_ELEMENT_ARRAY_BUFFER binding sticks to the VAO so we shouldn't unbind it
 		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 
@@ -177,7 +179,8 @@ namespace cgra {
 		// Bind our VAO which sets up all our buffers and data for us
 		glBindVertexArray(m_vao);
 		// Tell opengl to draw our VAO using the draw mode and how many verticies to render
-		// glDrawArrays(m_mode, 0, m_primitive_count); // without indices
+		//glDrawArrays(m_mode, 0, m_primitive_count); // without indices
+		//glDrawArrays(m_mode, 0, m_indices.size()); // without indices
 		glDrawElements(m_mode, m_indices.size(), GL_UNSIGNED_INT, 0); // with indices
 	}
 }
