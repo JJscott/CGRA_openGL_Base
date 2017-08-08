@@ -1,9 +1,20 @@
 
 #pragma once
 
+// project
 #include "opengl.hpp"
-
 #include "cgra/cgra_math.hpp"
+#include "cgra/cgra_mesh.hpp"
+
+
+class Axis {
+private:
+	GLuint m_shader;
+	cgra::mesh m_mesh;
+public:
+	Axis();
+	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
+};
 
 class Application {
 private:
@@ -12,6 +23,10 @@ private:
 
 	bool m_leftMouseDown = false;
 	cgra::vec2 m_mousePosition;
+
+	bool m_show_axis = false;
+	Axis m_axis;
+
 
 public:
 

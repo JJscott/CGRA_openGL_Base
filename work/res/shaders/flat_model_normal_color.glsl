@@ -10,15 +10,11 @@ layout(location = 2) in vec2 aMultiTexCoord0;
 
 // Model data (out to the fragment shader)
 out VertexData {
-	vec3 position;
-	vec3 normal;
-	vec2 textureCoord0;
+	vec3 model_normal;
 } v_out;
 
 void main() {
-	v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
-	v_out.normal = normalize((uModelViewMatrix * vec4(aNormal, 0)).xyz);
-	v_out.textureCoord0 = aMultiTexCoord0;
+	v_out.model_normal = aNormal;
 	gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1);
 }
 
@@ -30,16 +26,13 @@ void main() {
 
 // Viewspace data (in from the vertex shader)
 in VertexData {
-	vec3 position;
-	vec3 normal;
-	vec2 textureCoord0;
+	vec3 model_normal;
 } f_in;
 
 out vec3 fb_color;
 
 void main() {
-	vec3 eye = normalize(-f_in.position);
-	fb_color = abs(dot(normalize(f_in.normal), eye)) * vec3(0.7) + vec3(0.2);
+	fb_color = abs(f_in.model_normal);
 }
 
 #endif

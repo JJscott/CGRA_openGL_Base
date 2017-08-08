@@ -1,6 +1,4 @@
 
-
-// Constant across both shaders
 uniform mat4 uProjectionMatrix;
 uniform mat4 uModelViewMatrix;
 
@@ -12,7 +10,7 @@ layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aMultiTexCoord0;
 
-// Model data (to pass to fragment shader)
+// Model data (out to the fragment shader)
 out VertexData {
 	vec3 position;
 	vec3 normal;
@@ -32,19 +30,19 @@ void main() {
 
 #ifdef _FRAGMENT_
 
-// Viewspace data (passed in from the vertex shader)
+// Viewspace data (in from the vertex shader)
 in VertexData {
 	vec3 position;
 	vec3 normal;
 	vec2 textureCoord0;
 } f_in;
 
-out vec3 color;
+out vec3 fb_color;
 
 void main() {
 	vec3 eye = normalize(-f_in.position);
 	vec3 textureColor = texture(uTexture0, f_in.textureCoord0).rgb;
-	color = abs(dot(normalize(f_in.normal), eye)) * textureColor;
+	fb_color = abs(dot(normalize(f_in.normal), eye)) * textureColor;
 }
 
 #endif

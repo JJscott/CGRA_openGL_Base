@@ -7,7 +7,6 @@
 
 #include "cgra/cgra_gui.hpp"
 #include "cgra/cgra_image.hpp"
-#include "cgra/cgra_mesh.hpp"
 #include "cgra/cgra_shader.hpp"
 
 
@@ -57,9 +56,11 @@ void Application::charCallback(unsigned int c) {
 void Application::render(int width, int height) {
 	static GLuint shader = 0;
 	if (shader == 0) {
-		shader = makeShaderProgramFromFile("330 core",
-			//{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
-		{ GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/simple_texture.glsl");
+		shader = makeShaderProgramFromFile(
+			//"330 core", {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
+			"330 core", { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/simple_texture.glsl"
+			//"330 core", { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/flat_model_normal_color.glsl"
+		);
 	}
 
 	static GLuint texture = 0;
@@ -116,6 +117,9 @@ void Application::render(int width, int height) {
 
 	geometry.draw();
 
+	
+	if (m_show_axis) m_axis.draw(view, proj);
+
 
 	glUseProgram(0); // Unbind our shader
 	glBindVertexArray(0); // Unbind our geometry
@@ -127,5 +131,44 @@ void Application::renderGUI() {
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SliderFloat("Pitch", &m_pitch, -pi/2, pi/2);
 	ImGui::SliderFloat("Yaw", &m_yaw, -pi, pi);
+	ImGui::Checkbox("Show Axis", &m_show_axis);
 	ImGui::End();
+}
+
+
+
+Axis::Axis() {
+	m_mesh.m_mode = GL_LINES;
+	m_mesh.m_vertices = {
+		vertex(vec3(0, 0, 0), vec3(1, 0, 0)),
+		vertex(vec3(1e+15, 0, 0), vec3(1, 0, 0)),
+		vertex(vec3(-1e+15, 0, 0), vec3(1, 0, 0)),
+		vertex(vec3(0, 0, 0), vec3(0, 1, 0)),
+		vertex(vec3(0, 1e+15, 0), vec3(0, 1, 0)),
+		vertex(vec3(0, -1e+15, 0), vec3(0, 1, 0)),
+		vertex(vec3(0, 0, 0), vec3(0, 0, 1)),
+		vertex(vec3(0, 0, 1e+15), vec3(0, 0, 1)),
+		vertex(vec3(0, 0, -1e+15), vec3(0, 0, 1))
+	};
+	m_mesh.m_indices = {
+		0, 1,   0, 2,
+		3, 4,   3, 5,
+		6, 7,   6, 8
+	};
+
+	m_shader = makeShaderProgramFromFile(
+		"330 core",
+		{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER},
+		"work/res/shaders/flat_model_normal_color.glsl"
+	);
+}
+
+void Axis::draw(const mat4 &view, const mat4 &proj) {
+	mat4 modelview = view;
+
+	glUseProgram(m_shader);
+	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
+	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
+
+	m_mesh.draw();
 }
