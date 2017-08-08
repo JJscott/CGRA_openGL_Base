@@ -14,9 +14,7 @@ using namespace std;
 using namespace cgra;
 
 
-Application::Application() {
-	// TODO
-}
+Application::Application() {}
 
 
 void Application::cursorPosCallback(double xpos, double ypos) {
@@ -54,75 +52,17 @@ void Application::charCallback(unsigned int c) {
 
 
 void Application::render(int width, int height) {
-	static GLuint shader = 0;
-	if (shader == 0) {
-		shader = makeShaderProgramFromFile(
-			//"330 core", {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
-			"330 core", { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/simple_texture.glsl"
-			//"330 core", { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/flat_model_normal_color.glsl"
-		);
-	}
-
-	static GLuint texture = 0;
-	if (texture == 0) {
-		image<float, 4> img("work/res/textures/uv_texture.jpg");
-		texture = img.make_texture();
-	}
-
-	static mesh geometry(GL_TRIANGLES);
-
-	if (geometry.m_indices.empty()) {
-
-		vector<vertex> vdata = {
-			vertex(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
-			vertex(vec3( 1, -1, 0), vec3(0, 0, 1), vec2(1, 0)),
-			vertex(vec3( 1,  1, 0), vec3(0, 0, 1), vec2(1, 1)),
-			vertex(vec3(-1,  1, 0), vec3(0, 0, 1), vec2(0, 1))
-		};
-
-		vector<unsigned int> idata = {
-			0, 1, 2,
-			3, 0, 2
-		};
-
-		geometry.m_vertices = vdata;
-		geometry.m_indices = idata;
-
-		geometry.reupload();
-	}
-
-
+	
 	glEnable(GL_DEPTH_TEST); // Enable flags for normal rendering
 	glDepthFunc(GL_LESS);
 
-	glUseProgram(shader); // Use the shader we made
-
-	glActiveTexture(GL_TEXTURE0); // Set the location for binding the texture
-	glBindTexture(GL_TEXTURE_2D, texture); // Bind the texture
-										   // Set our sampler (texture0) to use GL_TEXTURE0 as the source
-	glUniform1i(glGetUniformLocation(shader, "uTexture0"), 0);
-
-
-	// Set up the matricies / uniforms
-	// 
+	// Calculate camera
 	mat4 proj = perspective<mat4>(1.0, float(width) / height, 0.1, 100.0);
 	mat4 view = translate3<mat4>(0, 0, -5) * rotate3x<mat4>(m_pitch) * rotate3y<mat4>(m_yaw);
-	mat4 model(1); // identity
 
-	mat4 modelview = view * model;
-
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, modelview.data());
-
-
-	geometry.draw();
-
+	m_test_quad.draw(view, proj);
 	
 	if (m_show_axis) m_axis.draw(view, proj);
-
-
-	glUseProgram(0); // Unbind our shader
-	glBindVertexArray(0); // Unbind our geometry
 }
 
 
@@ -169,6 +109,45 @@ void Axis::draw(const mat4 &view, const mat4 &proj) {
 	glUseProgram(m_shader);
 	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
 	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
+
+	m_mesh.draw();
+}
+
+
+TestQuad::TestQuad() {
+	m_shader = makeShaderProgramFromFile(
+		//"330 core", {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
+		"330 core", { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/simple_texture.glsl"
+	);
+
+	image<float, 4> img("work/res/textures/uv_texture.jpg");
+	m_texture = img.make_texture();
+
+
+	m_mesh.m_mode = GL_TRIANGLES;
+	m_mesh.m_vertices = {
+		vertex(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
+		vertex(vec3(1, -1, 0), vec3(0, 0, 1), vec2(1, 0)),
+		vertex(vec3(1,  1, 0), vec3(0, 0, 1), vec2(1, 1)),
+		vertex(vec3(-1,  1, 0), vec3(0, 0, 1), vec2(0, 1))
+	};
+	m_mesh.m_indices = {
+		0, 1, 2,
+		3, 0, 2
+	};
+	m_mesh.reupload();
+}
+
+void TestQuad::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
+	mat4 modelview = view;
+
+	glUseProgram(m_shader);
+	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
+	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
+
+	glActiveTexture(GL_TEXTURE0); // Set the location for binding the texture
+	glBindTexture(GL_TEXTURE_2D, m_texture); // Bind the texture
+	glUniform1i(glGetUniformLocation(m_shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
 
 	m_mesh.draw();
 }

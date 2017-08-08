@@ -16,6 +16,17 @@ public:
 	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
 };
 
+class TestQuad {
+private:
+	GLuint m_shader;
+	GLuint m_texture;
+	cgra::mesh m_mesh;
+public:
+	TestQuad();
+	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
+
+};
+
 class Application {
 private:
 	float m_pitch = 0;
@@ -26,6 +37,8 @@ private:
 
 	bool m_show_axis = false;
 	Axis m_axis;
+
+	TestQuad m_test_quad;
 
 
 public:
