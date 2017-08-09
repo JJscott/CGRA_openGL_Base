@@ -1,3 +1,4 @@
+#version 330 core
 
 uniform mat4 uProjectionMatrix;
 uniform mat4 uModelViewMatrix;

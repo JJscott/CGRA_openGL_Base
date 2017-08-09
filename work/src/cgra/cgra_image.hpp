@@ -3,6 +3,7 @@
 
 // std
 #include <chrono>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -162,7 +163,7 @@ namespace cgra {
 		}
 
 
-		GLuint make_texture(GLenum format = GL_RGBA8, GLuint tex = 0) const {
+		GLuint upload_texture(GLenum format = GL_RGBA8, GLuint tex = 0) const {
 			if (!tex) glGenTextures(1, &tex);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, tex);

@@ -20,7 +20,10 @@ Application::Application() {}
 void Application::cursorPosCallback(double xpos, double ypos) {
 	// do something
 	if (m_leftMouseDown) {
+		// clamp the pitch to [-pi/2, pi/2]
 		m_pitch = clamp(m_pitch + radians(ypos - m_mousePosition.y), -pi / 2, pi/2);
+
+		// wrap the yaw to [-pi, pi]
 		m_yaw += radians(xpos - m_mousePosition.x);
 		if (m_yaw > pi) m_yaw -= 2*pi;
 		else if (m_yaw < -pi) m_yaw += 2*pi;
@@ -78,6 +81,13 @@ void Application::renderGUI() {
 
 
 Axis::Axis() {
+	// compile shader
+	shader_program prog;
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/flat_model_normal_color.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/flat_model_normal_color.glsl");
+	m_shader = prog.compile();
+
+	// load mesh
 	m_mesh.m_mode = GL_LINES;
 	m_mesh.m_vertices = {
 		vertex(vec3(0, 0, 0), vec3(1, 0, 0)),
@@ -95,13 +105,8 @@ Axis::Axis() {
 		3, 4,   3, 5,
 		6, 7,   6, 8
 	};
-
-	m_shader = makeShaderProgramFromFile(
-		"330 core",
-		{GL_VERTEX_SHADER, GL_FRAGMENT_SHADER},
-		"work/res/shaders/flat_model_normal_color.glsl"
-	);
 }
+
 
 void Axis::draw(const mat4 &view, const mat4 &proj) {
 	mat4 modelview = view;
@@ -114,16 +119,19 @@ void Axis::draw(const mat4 &view, const mat4 &proj) {
 }
 
 
+
 TestQuad::TestQuad() {
-	m_shader = makeShaderProgramFromFile(
-		//"330 core", {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, "work/res/shaders/simple_grey.glsl");
-		"330 core", { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER }, "work/res/shaders/simple_texture.glsl"
-	);
+	// compile shader
+	shader_program prog;
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_texture.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_texture.glsl");
+	m_shader = prog.compile();
 
+	// load texture
 	image<float, 4> img("work/res/textures/uv_texture.jpg");
-	m_texture = img.make_texture();
+	m_texture = img.upload_texture();
 
-
+	// load mesh
 	m_mesh.m_mode = GL_TRIANGLES;
 	m_mesh.m_vertices = {
 		vertex(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
@@ -137,6 +145,7 @@ TestQuad::TestQuad() {
 	};
 	m_mesh.reupload();
 }
+
 
 void TestQuad::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 	mat4 modelview = view;

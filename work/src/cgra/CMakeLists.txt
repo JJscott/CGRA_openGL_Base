@@ -12,6 +12,7 @@ set(sources
 	"cgra_mesh.cpp"
 
 	"cgra_shader.hpp"
+	"cgra_shader.cpp"
 )
 
 # Add these sources to the project target

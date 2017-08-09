@@ -13,6 +13,12 @@
 #include <GLFW/glfw3.h>
 
 
+
+// gl_object is a helper class that wraps around a GLuint
+// object id for OpenGL. Does not allow copying (can't be
+// owned by more than one thing) and deallocates the object
+// when destroyed (easy cleanup). Can be used for VAO, VBO,
+// textures and frambuffers etc.
 class gl_object {
 public:
 	using destroyer_t = void (APIENTRY *)(GLsizei, const GLuint *);
@@ -106,5 +112,17 @@ public:
 		GLuint o;
 		glGenFramebuffers(1, &o);
 		return { o, glDeleteFramebuffers };
+	}
+
+	// returns a gl_object with an OpenGL shader identifier
+	static gl_object gen_shader(GLenum type) {
+		GLuint o = glCreateShader(type);
+		return { o, [](GLsizei, const GLuint *o) { glDeleteShader(*o); } };
+	}
+
+	// returns a gl_object with an OpenGL shader program identifier
+	static gl_object gen_program() {
+		GLuint o = glCreateProgram();
+		return { o, [](GLsizei, const GLuint *o) { glDeleteProgram(*o); } };
 	}
 };
