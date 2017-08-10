@@ -44,7 +44,7 @@ namespace cgra {
 
 	// copy ctors
 	mesh::mesh(const mesh &other)
-		: m_vertices(other.m_vertices), m_indices(other.m_indices), m_mode(other.m_mode), m_wire_frame(other.m_wire_frame) { }
+		: m_vertices(other.m_vertices), m_indices(other.m_indices), m_mode(other.m_mode), m_wireframe(other.m_wireframe) { }
 
 	mesh & mesh::operator=(const mesh &other) {
 		m_vao = {};
@@ -55,7 +55,7 @@ namespace cgra {
 		m_indices = other.m_indices;
 
 		m_mode = other.m_mode;
-		m_wire_frame = other.m_wire_frame;
+		m_wireframe = other.m_wireframe;
 
 		return *this;
 	}
@@ -102,15 +102,13 @@ namespace cgra {
 		// VBO
 		//
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-		// Pass through ALL the data giving it the size (in bytes)
-		// and a pointer to the data (in this case, the address of the first element in the vector)
+		// Upload ALL the data giving it the size (in bytes) and a pointer to the data
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), &vertex_data[0], GL_STATIC_DRAW);
 
 		// This buffer will use location=0 when we use our VAO
 		glEnableVertexAttribArray(0);
 		// Tell opengl how to treat data in location=0
 		// the data is treated in lots of 3 (3 floats = vec3)
-		// the other arguments are standard
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_length, (void*)(0));
 
 		// Do the same thing for Normals but bind it to location=1
@@ -146,7 +144,7 @@ namespace cgra {
 		if (!m_vao) reupload();
 
 		// Set wireframe or fill polygon mode
-		glPolygonMode(GL_FRONT_AND_BACK, (m_wire_frame) ? GL_LINE : GL_FILL);
+		glPolygonMode(GL_FRONT_AND_BACK, (m_wireframe) ? GL_LINE : GL_FILL);
 		// Bind our VAO which sets up all our buffers and data for us
 		glBindVertexArray(m_vao);
 		// Tell opengl to draw our VAO using the draw mode and how many verticies to render

@@ -19,7 +19,7 @@ namespace cgra {
 		void charCallback(GLFWwindow*, unsigned int c);
 
 
-		// Helper functions to setup, run and shutdown ImGui
+		// helper functions to setup, run and shutdown ImGui
 		//
 
 		bool init(GLFWwindow* window, bool install_callbacks=false);

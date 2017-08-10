@@ -1,11 +1,12 @@
 
+// std
 #include <iostream>
 #include <string>
 #include <stdexcept>
 
+// project
 #include "application.hpp"
 #include "opengl.hpp"
-
 #include "cgra/cgra_math.hpp"
 #include "cgra/cgra_gui.hpp"
 
@@ -120,11 +121,6 @@ int main(int argc, char **argv) {
 		// Make sure we draw to the WHOLE window
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
-		glViewport(0, 0, width, height);
-
-		// Grey/Blueish background
-		glClearColor(0.3f,0.3f,0.4f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Main Render
 		application.render(width, height);

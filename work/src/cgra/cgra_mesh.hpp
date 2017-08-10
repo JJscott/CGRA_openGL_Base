@@ -32,7 +32,7 @@ namespace cgra {
 			std::vector<vertex> m_vertices;
 			std::vector<unsigned int> m_indices;
 			GLenum m_mode = 0;
-			bool m_wire_frame = false;
+			bool m_wireframe = false;
 
 			mesh(
 				GLenum mode = GL_TRIANGLES,

@@ -1,10 +1,10 @@
 
-
+// std
 #include <iostream>
 #include <string>
 
+// project
 #include "application.hpp"
-
 #include "cgra/cgra_gui.hpp"
 #include "cgra/cgra_image.hpp"
 #include "cgra/cgra_shader.hpp"
@@ -14,7 +14,9 @@ using namespace std;
 using namespace cgra;
 
 
-Application::Application() {}
+Application::Application() {
+	// do something
+}
 
 
 void Application::cursorPosCallback(double xpos, double ypos) {
@@ -56,21 +58,34 @@ void Application::charCallback(unsigned int c) {
 
 void Application::render(int width, int height) {
 	
-	glEnable(GL_DEPTH_TEST); // Enable flags for normal rendering
+	// Ensure we draw to the entire 
+	glViewport(0, 0, width, height);
+
+	// Clear the back-buffer to a solid grey/blueish background
+	glClearColor(0.3f, 0.3f, 0.4f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	// Enable flags for normal/forward rendering
+	glEnable(GL_DEPTH_TEST); 
 	glDepthFunc(GL_LESS);
 
-	// Calculate camera
+
+	// Calculate the projection and view matrix
 	mat4 proj = perspective<mat4>(1.0, float(width) / height, 0.1, 100.0);
 	mat4 view = translate3<mat4>(0, 0, -5) * rotate3x<mat4>(m_pitch) * rotate3y<mat4>(m_yaw);
 
-	m_test_quad.draw(view, proj);
-	
+
+	// Draw geometry
 	if (m_show_axis) m_axis.draw(view, proj);
+	m_test_quad.draw(view, proj);
 }
 
 
 void Application::renderGUI() {
-	ImGui::Begin("Debug");
+
+	ImGui::SetNextWindowSize(ImVec2(280, 120), ImGuiSetCond_Once);
+	ImGui::Begin("Camera", 0);
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SliderFloat("Pitch", &m_pitch, -pi/2, pi/2);
 	ImGui::SliderFloat("Yaw", &m_yaw, -pi, pi);
@@ -109,12 +124,15 @@ Axis::Axis() {
 
 
 void Axis::draw(const mat4 &view, const mat4 &proj) {
+	// create the model/view matrix
 	mat4 modelview = view;
 
+	// load shader and variables
 	glUseProgram(m_shader);
 	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
 	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
 
+	// draw
 	m_mesh.draw();
 }
 
@@ -148,8 +166,10 @@ TestQuad::TestQuad() {
 
 
 void TestQuad::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
+	// create the model/view matrix
 	mat4 modelview = view;
 
+	// load shader and variables
 	glUseProgram(m_shader);
 	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
 	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
@@ -158,5 +178,6 @@ void TestQuad::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 	glBindTexture(GL_TEXTURE_2D, m_texture); // Bind the texture
 	glUniform1i(glGetUniformLocation(m_shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
 
+	// draw
 	m_mesh.draw();
 }
