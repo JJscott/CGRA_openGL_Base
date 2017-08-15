@@ -7,6 +7,7 @@ set(sources
 	"cgra_image.hpp"
 
 	"cgra_math.hpp"
+	"cgra_math.natvis"
 
 	"cgra_mesh.hpp"
 	"cgra_mesh.cpp"

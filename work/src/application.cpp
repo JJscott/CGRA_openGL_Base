@@ -72,8 +72,8 @@ void Application::render(int width, int height) {
 
 
 	// Calculate the projection and view matrix
-	mat4 proj = perspective<mat4>(1.0, float(width) / height, 0.1, 100.0);
-	mat4 view = translate3<mat4>(0, 0, -5) * rotate3x<mat4>(m_pitch) * rotate3y<mat4>(m_yaw);
+	mat4 proj = perspective(1.0, float(width) / height, 0.1, 100.0);
+	mat4 view = translate3(0, 0, -5) * rotate3x(m_pitch) * rotate3y(m_yaw);
 
 
 	// Draw geometry

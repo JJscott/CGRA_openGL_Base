@@ -53,7 +53,6 @@ public:
 
 	// input callbacks
 	//
-
 	void cursorPosCallback(double xpos, double ypos);
 	void mouseButtonCallback(int button, int action, int mods);
 	void scrollCallback(double xoffset, double yoffset);
