@@ -12,17 +12,17 @@ namespace cgra {
 	namespace {
 
 		// Data
-		static GLFWwindow*  g_window = NULL;
-		static double       g_time = 0.0f;
-		static bool         g_mousePressed[3] = { false, false, false };
-		static float        g_mouseWheel = 0.0f;
-		static GLuint       g_fontTexture = 0;
-		static int          g_shaderHandle = 0, g_vertHandle = 0, g_fragHandle = 0;
-		static int          g_attribLocationTex = 0, g_attribLocationProjMtx = 0;
-		static int          g_attribLocationPosition = 0, g_attribLocationUV = 0, g_attribLocationColor = 0;
-		static unsigned int g_vboHandle = 0, g_vaoHandle = 0, g_elementsHandle = 0;
+		GLFWwindow*  g_window = NULL;
+		double       g_time = 0.0f;
+		bool         g_mousePressed[3] = { false, false, false };
+		float        g_mouseWheel = 0.0f;
+		GLuint       g_fontTexture = 0;
+		int          g_shaderHandle = 0, g_vertHandle = 0, g_fragHandle = 0;
+		int          g_attribLocationTex = 0, g_attribLocationProjMtx = 0;
+		int          g_attribLocationPosition = 0, g_attribLocationUV = 0, g_attribLocationColor = 0;
+		unsigned int g_vboHandle = 0, g_vaoHandle = 0, g_elementsHandle = 0;
 
-		static void createFontsTexture() {
+		void createFontsTexture() {
 			// Build texture atlas
 			ImGuiIO& io = ImGui::GetIO();
 			unsigned char* pixels;
@@ -45,7 +45,7 @@ namespace cgra {
 			glBindTexture(GL_TEXTURE_2D, last_texture);
 		}
 
-		static bool createDeviceObjects() {
+		bool createDeviceObjects() {
 			// Backup GL state
 			GLint last_texture, last_array_buffer, last_vertex_array;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
@@ -148,7 +148,7 @@ namespace cgra {
 
 
 
-		static void renderDrawLists(ImDrawData* draw_data) {
+		void renderDrawLists(ImDrawData* draw_data) {
 			// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 			ImGuiIO& io = ImGui::GetIO();
 			int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
@@ -246,12 +246,12 @@ namespace cgra {
 		}
 
 
-		static const char* getClipboardText(void* user_data) {
+		const char* getClipboardText(void* user_data) {
 			return glfwGetClipboardString((GLFWwindow*)user_data);
 		}
 
 
-		static void setClipboardText(void* user_data, const char* text) {
+		void setClipboardText(void* user_data, const char* text) {
 			glfwSetClipboardString((GLFWwindow*)user_data, text);
 		}
 
@@ -332,13 +332,6 @@ namespace cgra {
 			return true;
 		}
 
-
-		void shutdown() {
-			invalidateDeviceObjects();
-			ImGui::Shutdown();
-		}
-
-
 		void newFrame() {
 			if (!g_fontTexture)
 				createDeviceObjects();
@@ -386,6 +379,12 @@ namespace cgra {
 		void render() {
 			ImGui::Render();
 		}
+
+		void shutdown() {
+			invalidateDeviceObjects();
+			ImGui::Shutdown();
+		}
+
 	}
 
 }

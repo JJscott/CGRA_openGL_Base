@@ -28,7 +28,6 @@ namespace cgra {
 			int m_primitive_count;
 
 		public:
-
 			std::vector<vertex> m_vertices;
 			std::vector<unsigned int> m_indices;
 			GLenum m_mode = 0;

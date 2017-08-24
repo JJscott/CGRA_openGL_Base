@@ -99,7 +99,7 @@ namespace cgra {
 
 		
 
-		// VBO
+		// VBO (single buffer, interleaved)
 		//
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 		// Upload ALL the data giving it the size (in bytes) and a pointer to the data

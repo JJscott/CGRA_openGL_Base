@@ -85,6 +85,7 @@ namespace cgra {
 
 		// cgra specific extra (allows different shaders to be defined in a single source)
 		// Start of CGRA addition
+		//
 		const auto get_define = [](GLenum stype) {
 			switch (stype) {
 			case GL_VERTEX_SHADER:
@@ -114,6 +115,7 @@ namespace cgra {
 		oss << "#define " << get_define(type) << std::endl;
 		oss << iss.rdbuf();
 		std::string final_source = oss.str();
+		//
 		// End of CGRA addition
 
 		// upload and compile the shader
