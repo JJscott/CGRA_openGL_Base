@@ -137,8 +137,8 @@ int main(int argc, char **argv) {
 	glfwTerminate();
 }
 
-namespace {
 
+namespace {
 
 	void cursorPosCallback(GLFWwindow *, double xpos, double ypos) {
 		ImGuiIO& io = ImGui::GetIO();

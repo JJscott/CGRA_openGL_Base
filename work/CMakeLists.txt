@@ -6,6 +6,10 @@
 # require new behaviour of: CMP0054
 cmake_minimum_required(VERSION 3.1)
 
+# Include Extra CMake capabilities
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(CGRAFunctions)
+
 # Project Name
 set(CGRA_PROJECT "base" CACHE STRING "CGRA Project Name")
 
@@ -13,7 +17,7 @@ set(CGRA_PROJECT "base" CACHE STRING "CGRA Project Name")
 project("CGRA_PROJECT_${CGRA_PROJECT}" CXX C)
 
 # Enable IDE Project Folders
-SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
 #########################################################
@@ -70,6 +74,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	# # C++17, full normal warnings
 	add_compile_options(-std=c++1z -Wall -Wextra -pedantic)
+	# C++14, full normal warnings
+	# add_compile_options(-std=c++1y -Wall -Wextra -pedantic)
 	# don't export by default
 	add_compile_options(-fvisibility=hidden)
 	# Threading support, OpenMP, enable SSE2
@@ -84,6 +90,8 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 	# # C++17, full normal warnings
 	add_compile_options(-std=c++1z -Wall -Wextra -pedantic)
+	# C++14, full normal warnings
+	# add_compile_options(-std=c++1y -Wall -Wextra -pedantic)
 	# don't export by default
 	add_compile_options(-fvisibility=hidden)
 	# Threading support, OpenMP, enable SSE2
@@ -91,38 +99,6 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 	# Promote missing return to error
 	add_compile_options(-Werror=return-type)
 endif()
-
-
-
-
-#########################################################
-# Helper methods
-# Allows us to set up source folders in a nice way
-#########################################################
-
-# Set source groups to mirror real directory tree
-function(target_source_group_tree target)
-	get_target_property(sources ${target} SOURCES)
-	foreach(source ${sources})
-		get_filename_component(source ${source} ABSOLUTE)
-		string(REPLACE ${PROJECT_SOURCE_DIR}/ "" rel ${source})
-		if(rel)
-			string(REGEX REPLACE "/([^/]*)$" "" rel ${rel})
-			if(NOT rel STREQUAL source)
-				string(REPLACE "/" "\\\\" rel ${rel})
-				source_group(${rel} FILES ${source})
-			endif()
-		endif()
-	endforeach()
-endfunction()
-
-# Add sources to a target relative to current CMakeLists.txt directory (CMAKE_CURRENT_SOURCE_DIR)
-function(target_relative_sources target)
-	foreach(source ${ARGN})
-		target_sources(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
-	endforeach()
-endfunction()
-
 
 
 
