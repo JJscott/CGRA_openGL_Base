@@ -180,7 +180,7 @@ namespace cgra {
 				0,
 				detail::gl_image_format<N>::value,
 				detail::gl_type_format<T>::value,
-				&m_data[0]
+				m_data.data()
 			);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			return tex;
