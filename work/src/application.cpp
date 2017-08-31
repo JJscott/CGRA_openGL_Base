@@ -117,7 +117,7 @@ Axis::Axis() {
 	shader_program prog;
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/flat_model_normal_color.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/flat_model_normal_color.glsl");
-	m_shader = prog.compile();
+	m_shader = prog.upload_shader();
 
 	// load mesh
 	mesh_data md;
@@ -163,7 +163,7 @@ Teapot::Teapot() {
 	shader_program prog;
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_texture.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_texture.glsl");
-	m_shader = prog.compile();
+	m_shader = prog.upload_shader();
 
 	// load texture
 	//image<float, 4> img("work/res/textures/uv_texture.jpg");
