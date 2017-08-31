@@ -19,13 +19,13 @@ public:
 
 // Quad for displaying a textured mesh
 //
-class TestQuad {
+class Teapot {
 private:
 	GLuint m_shader;
 	GLuint m_texture;
 	cgra::mesh m_mesh;
 public:
-	TestQuad();
+	Teapot();
 	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
 
 };
@@ -37,6 +37,7 @@ private:
 	// oribital camera
 	float m_pitch = 0;
 	float m_yaw = 0;
+	float m_distance = 10;
 
 	// last input
 	bool m_leftMouseDown = false;
@@ -45,7 +46,7 @@ private:
 	// geometry
 	bool m_show_axis = false;
 	Axis m_axis;
-	TestQuad m_test_quad;
+	Teapot m_test_quad;
 
 public:
 	// setup

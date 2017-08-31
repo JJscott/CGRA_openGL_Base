@@ -17,7 +17,9 @@ set(sources
 
 	"cgra_util.hpp"
 
-	"cgra_wavefront_loader.hpp"
+	"cgra_wavefront.hpp"
+
+	"CMakeLists.txt"
 )
 
 # Add these sources to the project target

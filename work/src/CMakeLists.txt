@@ -13,6 +13,8 @@ SET(sources
 	"opengl.hpp"
 
 	"main.cpp"
+
+	"CMakeLists.txt"
 )
 
 # Add executable target and link libraries

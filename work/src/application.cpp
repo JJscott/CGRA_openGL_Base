@@ -8,6 +8,7 @@
 #include "cgra/cgra_gui.hpp"
 #include "cgra/cgra_image.hpp"
 #include "cgra/cgra_shader.hpp"
+#include "cgra/cgra_wavefront.hpp"
 
 
 using namespace std;
@@ -19,11 +20,14 @@ Application::Application() { }
 
 void Application::cursorPosCallback(double xpos, double ypos) {
 	if (m_leftMouseDown) {
+		// every pixel is a 1/5th of a degree of rotation
+		vec2 delta_radians = radians(vec2(xpos, ypos) - m_mousePosition) / 5;
+
 		// clamp the pitch to [-pi/2, pi/2]
-		m_pitch = float(clamp(m_pitch + radians(ypos - m_mousePosition.y), -pi / 2, pi / 2));
+		m_pitch = float(clamp(m_pitch + delta_radians.y, -pi / 2, pi / 2));
 
 		// wrap the yaw to [-pi, pi]
-		m_yaw += float(radians(xpos - m_mousePosition.x));
+		m_yaw += float(delta_radians.x);
 		if (m_yaw > pi) m_yaw -= float(2 * pi);
 		else if (m_yaw < -pi) m_yaw += float(2 * pi);
 	}
@@ -43,7 +47,12 @@ void Application::mouseButtonCallback(int button, int action, int mods) {
 
 
 void Application::scrollCallback(double xoffset, double yoffset) {
-	(void) xoffset, yoffset; // currently un-used
+	(void) xoffset; // currently un-used
+
+	// logrithmic zoom
+	float d = 100 * pow(pow(m_distance / 100, 0.5) - (yoffset/20), 2.0);
+	if (d == d && !isinf(d))
+		m_distance = clamp(d, 0, 100);
 }
 
 
@@ -72,7 +81,7 @@ void Application::render(int width, int height) {
 
 	// calculate the projection and view matrix
 	mat4 proj = perspective(1.0, float(width) / height, 0.1, 100.0);
-	mat4 view = translate3(0, 0, -5) * rotate3x(m_pitch) * rotate3y(m_yaw);
+	mat4 view = translate3(0, 0, -m_distance) * rotate3x(m_pitch) * rotate3y(m_yaw);
 
 	// draw geometry
 	if (m_show_axis) m_axis.draw(view, proj);
@@ -83,13 +92,15 @@ void Application::render(int width, int height) {
 void Application::renderGUI() {
 
 	// setup window
-	ImGui::SetNextWindowSize(ImVec2(280, 120), ImGuiSetCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiSetCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(320, 150), ImGuiSetCond_Once);
 	ImGui::Begin("Camera", 0);
 
 	// display current camera parameters
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	ImGui::SliderFloat("Pitch", &m_pitch, float(-pi/2), float(pi/2));
-	ImGui::SliderFloat("Yaw", &m_yaw, float(-pi), float(pi));
+	ImGui::SliderFloat("Pitch", &m_pitch, float(-pi/2), float(pi/2), "%.2f");
+	ImGui::SliderFloat("Yaw", &m_yaw, float(-pi), float(pi), "%.2f");
+	ImGui::SliderFloat("Distance", &m_distance, 0, 100, "%.2f", 2.0f);
 	ImGui::Checkbox("Show Axis", &m_show_axis);
 
 	// finish creating window
@@ -145,7 +156,7 @@ void Axis::draw(const mat4 &view, const mat4 &proj) {
 }
 
 
-TestQuad::TestQuad() {
+Teapot::Teapot() {
 
 	// compile shader
 	shader_program prog;
@@ -154,29 +165,17 @@ TestQuad::TestQuad() {
 	m_shader = prog.compile();
 
 	// load texture
-	image<float, 4> img("work/res/textures/uv_texture.jpg");
+	//image<float, 4> img("work/res/textures/uv_texture.jpg");
+	image<float, 4> img("work/res/textures/checkerboard.jpg");
 	m_texture = img.upload_texture();
 
 	// load mesh
-	mesh_data md;
-	md.m_vertices = {
-		vertex_data(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
-		vertex_data(vec3(1, -1, 0), vec3(0, 0, 1), vec2(1, 0)),
-		vertex_data(vec3(1,  1, 0), vec3(0, 0, 1), vec2(1, 1)),
-		vertex_data(vec3(-1,  1, 0), vec3(0, 0, 1), vec2(0, 1))
-	};
-	md.m_indices = {
-		0, 1, 2,
-		3, 0, 2
-	};
-	md.m_mode = GL_TRIANGLES;
-	md.m_wireframe = false;
-
+	mesh_data md = cgra::load_wavefront_mesh_data("work/res/assets/teapot.obj");
 	m_mesh = md.upload(m_mesh);
 }
 
 
-void TestQuad::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
+void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 
 	// create the model/view matrix
 	mat4 modelview = view;
