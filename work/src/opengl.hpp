@@ -13,7 +13,6 @@
 #include <GLFW/glfw3.h>
 
 
-
 // gl_object is a helper class that wraps around a GLuint
 // object id for OpenGL. Does not allow copying (can't be
 // owned by more than one thing) and deallocates the object

@@ -8,6 +8,7 @@
 
 using namespace std;
 
+
 // helper function
 // returns the correct number of primitives given vertex index count and draw mode
 int primitive_count(int index_count, GLuint mode) {

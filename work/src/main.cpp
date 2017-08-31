@@ -13,7 +13,8 @@
 using namespace std;
 using namespace cgra;
 
-// Forward decleration for cleanliness
+
+// forward decleration for cleanliness
 namespace {
 	void cursorPosCallback(GLFWwindow *, double xpos, double ypos);
 	void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods);
@@ -22,7 +23,7 @@ namespace {
 	void charCallback(GLFWwindow *win, unsigned int c);
 	void APIENTRY debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, GLvoid*);
 
-	// Global static pointer to application once we create it
+	// global static pointer to application once we create it
 	// nessesary for interfacing with the GLFW callbacks
 	Application *application_ptr = nullptr;
 }
@@ -30,60 +31,60 @@ namespace {
 
 // Main program
 // 
-int main(int argc, char **argv) {
+int main() {
 
-	// Initialize the GLFW library
+	// initialize the GLFW library
 	if (!glfwInit()) {
 		cerr << "Error: Could not initialize GLFW" << endl;
-		abort(); // Unrecoverable error
+		abort(); // unrecoverable error
 	}
 
-	// Force OpenGL to create a 3.3 core context
+	// force OpenGL to create a 3.3 core context
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// Disallow legacy functionality (helps OS X work)
+	// disallow legacy functionality (helps OS X work)
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	// Get the version for GLFW for later
+	// get the version for GLFW for later
 	int glfwMajor, glfwMinor, glfwRevision;
 	glfwGetVersion(&glfwMajor, &glfwMinor, &glfwRevision);
 
-	// Request a debug context so we get debug callbacks.
-	// Remove this for possible GL performance increases.
+	// request a debug context so we get debug callbacks
+	// remove this for possible GL performance increases
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
-	// Create a windowed mode window and its OpenGL context
+	// create a windowed mode window and its OpenGL context
 	GLFWwindow *window = glfwCreateWindow(800, 600, "Hello World!", nullptr, nullptr);
 	if (!window) {
 		cerr << "Error: Could not create GLFW window" << endl;
-		abort(); // Unrecoverable error
+		abort(); // unrecoverable error
 	}
 
-	// Make the window's context current.
-	// If we have multiple windows we will need to switch contexts
+	// make the window's context current.
+	// if we have multiple windows we will need to switch contexts
 	glfwMakeContextCurrent(window);
 
-	// Initialize GLEW
+	// initialize GLEW
 	// must be done after making a GL context current (glfwMakeContextCurrent in this case)
 	glewExperimental = GL_TRUE; // required for full GLEW functionality for OpenGL 3.0+
 	GLenum err = glewInit();
-	if (GLEW_OK != err) { // Problem: glewInit failed, something is seriously wrong.
+	if (GLEW_OK != err) { // problem: glewInit failed, something is seriously wrong.
 		cerr << "Error: " << glewGetErrorString(err) << endl;
-		abort(); // Unrecoverable error
+		abort(); // unrecoverable error
 	}
 
-	// Print out our OpenGL verisions
+	// print out our OpenGL verisions
 	cout << "Using OpenGL " << glGetString(GL_VERSION) << endl;
 	cout << "Using GLEW " << glewGetString(GLEW_VERSION) << endl;
 	cout << "Using GLFW " << glfwMajor << "." << glfwMinor << "." << glfwRevision << endl;
 
-	// Enable GL_ARB_debug_output if available. Not necessary, just helpful
+	// enable GL_ARB_debug_output if available. Not necessary, just helpful
 	if (glfwExtensionSupported("GL_ARB_debug_output")) {
-		// This allows the error location to be determined from a stacktrace
+		// this allows the error location to be determined from a stacktrace
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-		// Setup up the callback
+		// setup up the callback
 		glDebugMessageCallbackARB(debugCallback, nullptr);
 		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, true);
 		cout << "GL_ARB_debug_output callback installed" << endl;
@@ -92,13 +93,13 @@ int main(int argc, char **argv) {
 		cout << "GL_ARB_debug_output not available. No worries." << endl;
 	}
 
-	// Initialize ImGui
+	// initialize ImGui
 	if (!cgra::gui::init(window)) {
 		cerr << "Error: Could not initialize ImGui" << endl;
-		abort(); // Unrecoverable error
+		abort(); // unrecoverable error
 	}
 
-	// Attach input callbacks to window
+	// attach input callbacks to window
 	glfwSetCursorPosCallback(window, cursorPosCallback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 	glfwSetScrollCallback(window, scrollCallback);
@@ -106,18 +107,18 @@ int main(int argc, char **argv) {
 	glfwSetCharCallback(window, charCallback);
 
 	
-	// Create the application object (and a global pointer to it)
+	// create the application object (and a global pointer to it)
 	Application application;
 	application_ptr = &application;
 
-	// Loop until the user closes the window
+	// loop until the user closes the window
 	while (!glfwWindowShouldClose(window)) {
 
-		// Make sure we draw to the WHOLE window
+		// make sure we draw to the WHOLE window
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
-		// Main Render
+		// main Render
 		application.render(width, height);
 
 		// GUI Render on top
@@ -125,10 +126,10 @@ int main(int argc, char **argv) {
 		application.renderGUI();
 		cgra::gui::render();
 
-		// Swap front and back buffers
+		// swap front and back buffers
 		glfwSwapBuffers(window);
 
-		// Poll for and process events
+		// poll for and process events
 		glfwPollEvents();
 	}
 
@@ -144,42 +145,51 @@ namespace {
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureMouse) return;
 
+		// if not captured then foward to application
 		application_ptr->cursorPosCallback(xpos, ypos);
 	}
 
 
 	void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
-		cgra::gui::mouseButtonCallback(win, button, action, mods); // forward to ImGui
+		// forward callback to ImGui
+		cgra::gui::mouseButtonCallback(win, button, action, mods);
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureMouse) return;
 
+		// if not captured then foward to application
 		application_ptr->mouseButtonCallback(button, action, mods);
 	}
 
 
 	void scrollCallback(GLFWwindow *win, double xoffset, double yoffset) {
-		cgra::gui::scrollCallback(win, xoffset, yoffset); // forward to ImGui
+		// forward callback to ImGui
+		cgra::gui::scrollCallback(win, xoffset, yoffset);
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureMouse) return;
 
+		// if not captured then foward to application
 		application_ptr->scrollCallback(xoffset, yoffset);
 	}
 
 
 	void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
-		cgra::gui::keyCallback(win, key, scancode, action, mods); // forward to ImGui
+		// forward callback to ImGui
+		cgra::gui::keyCallback(win, key, scancode, action, mods);
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureKeyboard) return;
 
+		// if not captured then foward to application
 		application_ptr->keyCallback(key, scancode, action, mods);
 	}
 
 
 	void charCallback(GLFWwindow *win, unsigned int c) {
-		cgra::gui::charCallback(win, c); // forward to ImGui
+		// forward callback to ImGui
+		cgra::gui::charCallback(win, c);
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantTextInput) return;
 
+		// if not captured then foward to application
 		application_ptr->charCallback(c);
 	}
 

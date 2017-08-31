@@ -5,13 +5,15 @@
 // project
 #include "cgra_gui.hpp"
 
+
 using namespace std;
+
 
 namespace cgra {
 
 	namespace {
 
-		// Data
+		// internal data
 		GLFWwindow*  g_window = NULL;
 		double       g_time = 0.0f;
 		bool         g_mousePressed[3] = { false, false, false };
@@ -22,14 +24,20 @@ namespace cgra {
 		int          g_attribLocationPosition = 0, g_attribLocationUV = 0, g_attribLocationColor = 0;
 		unsigned int g_vboHandle = 0, g_vaoHandle = 0, g_elementsHandle = 0;
 
+
 		void createFontsTexture() {
-			// Build texture atlas
+			// build texture atlas
 			ImGuiIO& io = ImGui::GetIO();
 			unsigned char* pixels;
 			int width, height;
-			io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bits (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
 
-																	  // Upload texture to graphics system
+			// Load as RGBA 32-bits (75% of the memory is wasted, but default font is so small)
+			// because it is more likely to be compatible with user's existing shaders.
+			// If your ImTextureId represent a higher-level concept than just a GL texture id,
+			// consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
+			io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   
+
+			// upload texture to graphics system
 			GLint last_texture;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 			glGenTextures(1, &g_fontTexture);
@@ -38,15 +46,15 @@ namespace cgra {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-			// Store our identifier
+			// store our identifier
 			io.Fonts->TexID = (void *)(intptr_t)g_fontTexture;
 
-			// Restore state
+			// restore state
 			glBindTexture(GL_TEXTURE_2D, last_texture);
 		}
 
 		bool createDeviceObjects() {
-			// Backup GL state
+			// backup GL state
 			GLint last_texture, last_array_buffer, last_vertex_array;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 			glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
@@ -113,7 +121,7 @@ namespace cgra {
 
 			createFontsTexture();
 
-			// Restore modified GL state
+			// restore modified GL state
 			glBindTexture(GL_TEXTURE_2D, last_texture);
 			glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
 			glBindVertexArray(last_vertex_array);
@@ -149,7 +157,7 @@ namespace cgra {
 
 
 		void renderDrawLists(ImDrawData* draw_data) {
-			// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+			// avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 			ImGuiIO& io = ImGui::GetIO();
 			int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
 			int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
@@ -157,7 +165,7 @@ namespace cgra {
 				return;
 			draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
-			// Backup GL state
+			// backup GL state
 			GLint last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
 			glActiveTexture(GL_TEXTURE0);
 			GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
@@ -178,7 +186,7 @@ namespace cgra {
 			GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
 			GLboolean last_enable_scissor_test = glIsEnabled(GL_SCISSOR_TEST);
 
-			// Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
+			// setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
 			glEnable(GL_BLEND);
 			glBlendEquation(GL_FUNC_ADD);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -186,7 +194,7 @@ namespace cgra {
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_SCISSOR_TEST);
 
-			// Setup viewport, orthographic projection matrix
+			// setup viewport, orthographic projection matrix
 			glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
 			const float ortho_projection[4][4] =
 			{
@@ -228,7 +236,7 @@ namespace cgra {
 				}
 			}
 
-			// Restore modified GL state
+			// restore modified GL state
 			glUseProgram(last_program);
 			glBindTexture(GL_TEXTURE_2D, last_texture);
 			glActiveTexture(last_active_texture);
@@ -266,7 +274,7 @@ namespace cgra {
 
 
 		void scrollCallback(GLFWwindow*, double /*xoffset*/, double yoffset) {
-			g_mouseWheel += (float)yoffset; // Use fractional mouse wheel, 1.0 unit 5 lines.
+			g_mouseWheel += (float)yoffset; // use fractional mouse wheel, 1.0 unit 5 lines.
 		}
 
 
@@ -277,7 +285,7 @@ namespace cgra {
 			if (action == GLFW_RELEASE)
 				io.KeysDown[key] = false;
 
-			(void)mods; // Modifiers are not reliable across systems
+			(void)mods; // modifiers are not reliable across systems
 			io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
 			io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
 			io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
@@ -295,7 +303,7 @@ namespace cgra {
 			g_window = window;
 
 			ImGuiIO& io = ImGui::GetIO();
-			// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+			// keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 			io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
 			io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
 			io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
@@ -316,7 +324,7 @@ namespace cgra {
 			io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
 			io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
-			// Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
+			// alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
 			io.RenderDrawListsFn = renderDrawLists;
 			io.SetClipboardTextFn = setClipboardText;
 			io.GetClipboardTextFn = getClipboardText;
@@ -338,7 +346,7 @@ namespace cgra {
 
 			ImGuiIO& io = ImGui::GetIO();
 
-			// Setup display size (every frame to accommodate for window resizing)
+			// setup display size (every frame to accommodate for window resizing)
 			int w, h;
 			int display_w, display_h;
 			glfwGetWindowSize(g_window, &w, &h);
@@ -346,12 +354,12 @@ namespace cgra {
 			io.DisplaySize = ImVec2((float)w, (float)h);
 			io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
 
-			// Setup time step
+			// setup time step
 			double current_time =  glfwGetTime();
 			io.DeltaTime = g_time > 0.0 ? (float)(current_time - g_time) : (float)(1.0f/60.0f);
 			g_time = current_time;
 
-			// Setup inputs
+			// setup inputs
 			// (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
 			if (glfwGetWindowAttrib(g_window, GLFW_FOCUSED)) {
 				double mouse_x, mouse_y;
@@ -369,10 +377,10 @@ namespace cgra {
 			io.MouseWheel = g_mouseWheel;
 			g_mouseWheel = 0.0f;
 
-			// Hide OS mouse cursor if ImGui is drawing it
+			// hide OS mouse cursor if ImGui is drawing it
 			glfwSetInputMode(g_window, GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-			// Start the frame
+			// start the frame
 			ImGui::NewFrame();
 		}
 

@@ -6,7 +6,8 @@
 #include "cgra/cgra_math.hpp"
 #include "cgra/cgra_mesh.hpp"
 
-
+// Helper class to draw an axis
+//
 class Axis {
 private:
 	GLuint m_shader;
@@ -16,6 +17,8 @@ public:
 	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
 };
 
+// Quad for displaying a textured mesh
+//
 class TestQuad {
 private:
 	GLuint m_shader;
@@ -27,7 +30,8 @@ public:
 
 };
 
-// main application class
+// Main application class
+//
 class Application {
 private:
 	// oribital camera
@@ -52,7 +56,6 @@ public:
 	Application& operator=(const Application&) = delete;
 
 	// input callbacks
-	//
 	void cursorPosCallback(double xpos, double ypos);
 	void mouseButtonCallback(int button, int action, int mods);
 	void scrollCallback(double xoffset, double yoffset);
@@ -60,8 +63,6 @@ public:
 	void charCallback(unsigned int c);
 
 	// rendering callbacks (every frame)
-	//
-
 	void render(int width, int height);
 	void renderGUI();
 };

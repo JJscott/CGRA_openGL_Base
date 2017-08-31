@@ -9,6 +9,7 @@
 // project
 #include <opengl.hpp>
 
+
 namespace cgra {
 
 	class shader_program {

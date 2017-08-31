@@ -11,6 +11,27 @@
 #include <opengl.hpp>
 
 
+// forward declaration
+class shader_error : public std::runtime_error {
+public:
+	explicit shader_error(const std::string &what_ = "Generic shader error.") : std::runtime_error(what_) { }
+};
+
+class shader_type_error : public shader_error {
+public:
+	explicit shader_type_error(const std::string &what_ = "Bad shader type.") : shader_error(what_) { }
+};
+
+class shader_compile_error : public shader_error {
+public:
+	explicit shader_compile_error(const std::string &what_ = "Shader compilation failed.") : shader_error(what_) { }
+};
+
+class shader_link_error : public shader_error {
+public:
+	explicit shader_link_error(const std::string &what_ = "Shader program linking failed.") : shader_error(what_) { }
+};
+
 void printShaderInfoLog(GLuint obj) {
 	int infologLength = 0;
 	int charsWritten = 0;
@@ -32,28 +53,6 @@ void printProgramInfoLog(GLuint obj) {
 		std::cout << "CGRA Shader : " << "PROGRAM :\n" << &infoLog[0] << std::endl;
 	}
 }
-
-
-// Forward declaration
-class shader_error : public std::runtime_error {
-public:
-	explicit shader_error(const std::string &what_ = "Generic shader error.") : std::runtime_error(what_) { }
-};
-
-class shader_type_error : public shader_error {
-public:
-	explicit shader_type_error(const std::string &what_ = "Bad shader type.") : shader_error(what_) { }
-};
-
-class shader_compile_error : public shader_error {
-public:
-	explicit shader_compile_error(const std::string &what_ = "Shader compilation failed.") : shader_error(what_) { }
-};
-
-class shader_link_error : public shader_error {
-public:
-	explicit shader_link_error(const std::string &what_ = "Shader program linking failed.") : shader_error(what_) { }
-};
 
 
 namespace cgra {
