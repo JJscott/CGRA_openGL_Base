@@ -131,7 +131,7 @@ namespace cgra {
 		m_shaders[type] = std::make_shared<gl_object>(std::move(shader));
 	}
 
-	GLuint shader_program::compile() {
+	GLuint shader_program::upload_shader() {
 		GLuint program = glCreateProgram();
 
 		// attach shaders

@@ -21,7 +21,7 @@ namespace cgra {
 		void set_shader(GLenum type, const std::string &filename);
 		void set_shader_source(GLenum type, const std::string &shadersource);
 
-		GLuint compile();
+		GLuint upload_shader();
 	};
 
 }

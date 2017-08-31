@@ -8,9 +8,9 @@
 
 namespace cgra {
 
-	void mesh::draw() {
+	void mesh::draw(bool wireframe) {
 		// set wireframe or fill polygon mode
-		glPolygonMode(GL_FRONT_AND_BACK, (m_wireframe) ? GL_LINE : GL_FILL);
+		glPolygonMode(GL_FRONT_AND_BACK, (wireframe) ? GL_LINE : GL_FILL);
 		// bind our VAO which sets up all our buffers and data for us
 		glBindVertexArray(m_vao);
 		// tell opengl to draw our VAO using the draw mode and how many verticies to render
@@ -28,17 +28,15 @@ namespace cgra {
 	mesh_data::mesh_data(
 		const std::vector<vertex_data> &vertices,
 		const std::vector<unsigned int> &indices,
-		GLenum mode,
-		bool wireframe
+		GLenum mode
 	) :
 		m_vertices(vertices),
 		m_indices(indices),
-		m_mode(mode),
-		m_wireframe(wireframe)
+		m_mode(mode)
 	{ }
 
 
-	mesh mesh_data::upload(mesh m) {
+	mesh mesh_data::upload_mesh(mesh m) {
 
 		// Create the buffers if they don't exist
 		// VAO stores information about how the VBOs are set up
@@ -102,7 +100,6 @@ namespace cgra {
 		// Set the index count and draw modes
 		m.m_index_count = m_indices.size();
 		m.m_mode = m_mode;
-		m.m_wireframe = m_wireframe;
 
 		// Clean up by binding 0, good practice
 		// the GL_ELEMENT_ARRAY_BUFFER binding sticks to the VAO so we shouldn't unbind it

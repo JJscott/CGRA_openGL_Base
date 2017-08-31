@@ -37,7 +37,7 @@ private:
 	// oribital camera
 	float m_pitch = 0;
 	float m_yaw = 0;
-	float m_distance = 10;
+	float m_distance = 50;
 
 	// last input
 	bool m_leftMouseDown = false;

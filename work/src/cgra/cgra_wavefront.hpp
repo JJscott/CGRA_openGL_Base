@@ -15,6 +15,7 @@ namespace cgra {
 
 	mesh_data load_wavefront_mesh_data(const std::string &filename) {
 
+		// struct for storing wavefront index data
 		struct wavefront_vertex {
 			unsigned int p, n, t;
 		};
@@ -109,14 +110,7 @@ namespace cgra {
 			}
 		}
 
-		std::cout << "Reading OBJ file is DONE." << std::endl;
-		std::cout << positions.size() << " points" << std::endl;
-		std::cout << normals.size() << " normals" << std::endl;
-		std::cout << uvs.size() << " uv coords" << std::endl;
-		std::cout << wv_vertices.size()/3 << " faces" << std::endl;
-
-
-		// if we didn't have any normals, create them naively
+		// if we don't have any normals, create them naively
 		if (normals.size() <= 1) {
 			// Create the normals as 3d vectors of 0
 			for (size_t i = 1; i < positions.size(); i++) {
@@ -170,6 +164,6 @@ namespace cgra {
 			);
 		}
 
-		return mesh_data(vertices, indices, GL_TRIANGLES, false);
+		return mesh_data(vertices, indices, GL_TRIANGLES);
 	}
 }

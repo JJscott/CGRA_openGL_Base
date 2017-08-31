@@ -96,11 +96,13 @@ void Application::renderGUI() {
 	ImGui::SetNextWindowSize(ImVec2(320, 150), ImGuiSetCond_Once);
 	ImGui::Begin("Camera", 0);
 
-	// display current camera parameters
+	// Display current camera parameters
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SliderFloat("Pitch", &m_pitch, float(-pi/2), float(pi/2), "%.2f");
 	ImGui::SliderFloat("Yaw", &m_yaw, float(-pi), float(pi), "%.2f");
 	ImGui::SliderFloat("Distance", &m_distance, 0, 100, "%.2f", 2.0f);
+
+	// Extra drawing parameters
 	ImGui::Checkbox("Show Axis", &m_show_axis);
 
 	// finish creating window
@@ -136,8 +138,7 @@ Axis::Axis() {
 		6, 7,   6, 8
 	};
 	md.m_mode = GL_LINES;
-	md.m_wireframe = false;
-	m_mesh = md.upload();
+	m_mesh = md.upload_mesh();
 }
 
 
@@ -171,7 +172,7 @@ Teapot::Teapot() {
 
 	// load mesh
 	mesh_data md = cgra::load_wavefront_mesh_data("work/res/assets/teapot.obj");
-	m_mesh = md.upload(m_mesh);
+	m_mesh = md.upload_mesh(m_mesh);
 }
 
 

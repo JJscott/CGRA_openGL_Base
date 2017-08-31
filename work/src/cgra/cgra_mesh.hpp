@@ -10,6 +10,10 @@
 
 namespace cgra {
 
+	// A data structure for holding buffer IDs 
+	// and other information related to drawing
+	// also has helper functions for drawing, and
+	// deleting the buffers (for cleanup)
 	struct mesh {
 		// GL buffer ids
 		GLuint m_vao = 0;
@@ -21,11 +25,11 @@ namespace cgra {
 
 		// mode to draw in
 		GLenum m_mode = 0;
-		bool m_wireframe = false;
 
-		void draw();
+		void draw(bool wireframe = false);
 		void destroy();
 	};
+
 
 	struct vertex_data {
 		vec3 pos;
@@ -42,16 +46,14 @@ namespace cgra {
 			std::vector<vertex_data> m_vertices;
 			std::vector<unsigned int> m_indices;
 			GLenum m_mode;
-			bool m_wireframe;
 
 			mesh_data(
 				const std::vector<vertex_data> &vertices = {},
 				const std::vector<unsigned int> &indices = {},
-				GLenum mode = GL_TRIANGLES,
-				bool wireframe = false
+				GLenum mode = GL_TRIANGLES
 			);
 
-			mesh upload(mesh m = {});
+			mesh upload_mesh(mesh m = {});
 	};
 
 }
