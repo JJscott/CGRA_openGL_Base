@@ -138,11 +138,11 @@ namespace cgra {
 
 
 		// returns a vector with RGBA values from the given cell
-		vector_t & texel(int x, int y) { return reinterpret_cast<vector_t &>(m_data[N*(x + y*m_size.x)]); }
-		const vector_t & texel(int x, int y) const { return reinterpret_cast<const vector_t &>(m_data[N*(x + y*m_size.x)]); }
+		vector_t & texel(float x, float y) { return reinterpret_cast<vector_t &>(m_data[N*(floor(x) + floor(y)*m_size.x)]); }
+		const vector_t & texel(float x, float y) const { return reinterpret_cast<const vector_t &>(m_data[N*(floor(x) + floor(y)*m_size.x)]); }
 
-		vector_t & texel(const basic_vec<int, 2> &c) { return reinterpret_cast<vector_t &>(m_data[N*(c.x + c.y*m_size.x])); }
-		const vector_t & texel(const basic_vec<int, 2> &c) const { return reinterpret_cast<const vector_t &>(m_data[N*(c.x + c.y*m_size.x])); }
+		vector_t & texel(const basic_vec<float, 2> &c) { this->texel(c.x, c.y); }
+		const vector_t & texel(const basic_vec<float, 2> &c) const { this->texel(c.x, c.y); }
 
 
 		// bilinear filtering with wrapping

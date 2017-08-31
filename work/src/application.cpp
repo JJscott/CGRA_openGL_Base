@@ -15,7 +15,21 @@ using namespace std;
 using namespace cgra;
 
 
-Application::Application() { }
+Application::Application() {
+	// compile axis shader
+	shader_program prog;
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/axis.glsl");
+	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/axis.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/axis.glsl");
+	m_axis_shader = prog.upload_shader();
+
+	// compile aabb shader
+	prog = shader_program();
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/aabb.glsl");
+	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/aabb.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/aabb.glsl");
+	m_aabb_shader = prog.upload_shader();
+}
 
 
 void Application::cursorPosCallback(double xpos, double ypos) {
@@ -80,12 +94,35 @@ void Application::render(int width, int height) {
 	glDepthFunc(GL_LESS);
 
 	// calculate the projection and view matrix
-	mat4 proj = perspective(1.0, float(width) / height, 0.1, 100.0);
+	mat4 proj = perspective(1.0, float(width) / height, 0.1, 1000.0);
 	mat4 view = translate3(0, 0, -m_distance) * rotate3x(m_pitch) * rotate3y(m_yaw);
 
-	// draw geometry
-	if (m_show_axis) m_axis.draw(view, proj);
-	m_test_quad.draw(view, proj);
+	// draw axis
+	if (m_show_axis) {
+		// load shader and variables
+		glUseProgram(m_axis_shader);
+		glUniformMatrix4fv(glGetUniformLocation(m_axis_shader, "uProjectionMatrix"), 1, false, proj.data());
+		glUniformMatrix4fv(glGetUniformLocation(m_axis_shader, "uModelViewMatrix"), 1, false, view.data());
+		// the shader requires 6 instances to draw all 6 lines for the axes
+		// geometry is created inside the shader
+		draw_dummy(6);
+	}
+
+	// draw the AABB
+	if (m_show_aabb) {
+		// load shader and variables
+		glUseProgram(m_aabb_shader);
+		glUniformMatrix4fv(glGetUniformLocation(m_aabb_shader, "uProjectionMatrix"), 1, false, proj.data());
+		glUniformMatrix4fv(glGetUniformLocation(m_aabb_shader, "uModelViewMatrix"), 1, false, view.data());
+		glUniform3fv(glGetUniformLocation(m_aabb_shader, "uMin"), 1, m_test_teapot.m_min.data());
+		glUniform3fv(glGetUniformLocation(m_aabb_shader, "uMax"), 1, m_test_teapot.m_max.data());
+		// the shader requires 12 instances to draw all 12 lines for the aabb
+		// geometry is created inside the shader
+		draw_dummy(12);
+	}
+
+	// draw the teapot
+	m_test_teapot.draw(view, proj, m_wireframe);
 }
 
 
@@ -93,7 +130,7 @@ void Application::renderGUI() {
 
 	// setup window
 	ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiSetCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(320, 150), ImGuiSetCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
 	ImGui::Begin("Camera", 0);
 
 	// Display current camera parameters
@@ -104,56 +141,11 @@ void Application::renderGUI() {
 
 	// Extra drawing parameters
 	ImGui::Checkbox("Show Axis", &m_show_axis);
+	ImGui::Checkbox("Show Wireframe", &m_wireframe);
+	ImGui::Checkbox("Show AABB", &m_show_aabb);
 
 	// finish creating window
 	ImGui::End();
-}
-
-
-
-Axis::Axis() {
-
-	// compile shader
-	shader_program prog;
-	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/flat_model_normal_color.glsl");
-	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/flat_model_normal_color.glsl");
-	m_shader = prog.upload_shader();
-
-	// load mesh
-	mesh_data md;
-	md.m_vertices = {
-		vertex_data(vec3(0, 0, 0), vec3(1, 0, 0)),
-		vertex_data(vec3(1e+15, 0, 0), vec3(1, 0, 0)),
-		vertex_data(vec3(-1e+15, 0, 0), vec3(1, 0, 0)),
-		vertex_data(vec3(0, 0, 0), vec3(0, 1, 0)),
-		vertex_data(vec3(0, 1e+15, 0), vec3(0, 1, 0)),
-		vertex_data(vec3(0, -1e+15, 0), vec3(0, 1, 0)),
-		vertex_data(vec3(0, 0, 0), vec3(0, 0, 1)),
-		vertex_data(vec3(0, 0, 1e+15), vec3(0, 0, 1)),
-		vertex_data(vec3(0, 0, -1e+15), vec3(0, 0, 1))
-	};
-	md.m_indices = {
-		0, 1,   0, 2,
-		3, 4,   3, 5,
-		6, 7,   6, 8
-	};
-	md.m_mode = GL_LINES;
-	m_mesh = md.upload_mesh();
-}
-
-
-void Axis::draw(const mat4 &view, const mat4 &proj) {
-
-	// create the model/view matrix
-	mat4 modelview = view;
-
-	// load shader and variables
-	glUseProgram(m_shader);
-	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
-	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
-
-	// draw
-	m_mesh.draw();
 }
 
 
@@ -173,10 +165,19 @@ Teapot::Teapot() {
 	// load mesh
 	mesh_data md = cgra::load_wavefront_mesh_data("work/res/assets/teapot.obj");
 	m_mesh = md.upload_mesh(m_mesh);
+
+	// compute min/max
+	if (md.m_vertices.size()) {
+		m_min = m_max = md.m_vertices[0].pos;
+		for (auto &v : md.m_vertices) {
+			m_min = min(m_min, v.pos);
+			m_max = max(m_max, v.pos);
+		}
+	}
 }
 
 
-void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
+void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj, bool wireframe) {
 
 	// create the model/view matrix
 	mat4 modelview = view;
@@ -192,5 +193,5 @@ void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 	glUniform1i(glGetUniformLocation(m_shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
 
 	// draw
-	m_mesh.draw();
+	m_mesh.draw(wireframe);
 }

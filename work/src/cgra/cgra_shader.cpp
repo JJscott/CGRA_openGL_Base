@@ -151,6 +151,3 @@ namespace cgra {
 		return program;
 	}
 }
-
-
-

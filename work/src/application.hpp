@@ -6,29 +6,24 @@
 #include "cgra/cgra_math.hpp"
 #include "cgra/cgra_mesh.hpp"
 
-// Helper class to draw an axis
-//
-class Axis {
-private:
-	GLuint m_shader;
-	cgra::mesh m_mesh;
-public:
-	Axis();
-	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
-};
 
-// Quad for displaying a textured mesh
+// Teapot for displaying a textured mesh
 //
 class Teapot {
 private:
 	GLuint m_shader;
 	GLuint m_texture;
 	cgra::mesh m_mesh;
+
 public:
+	cgra::vec3 m_min;
+	cgra::vec3 m_max;
+
 	Teapot();
-	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
+	void draw(const cgra::mat4 &view, const cgra::mat4 &proj, bool wireframe);
 
 };
+
 
 // Main application class
 //
@@ -43,10 +38,17 @@ private:
 	bool m_leftMouseDown = false;
 	cgra::vec2 m_mousePosition;
 
-	// geometry
+	// axis
 	bool m_show_axis = false;
-	Axis m_axis;
-	Teapot m_test_quad;
+	GLuint m_axis_shader = 0;
+
+	// aabb
+	bool m_show_aabb = false;
+	GLuint m_aabb_shader = 0;
+
+	// geometry
+	bool m_wireframe = false;
+	Teapot m_test_teapot;
 
 public:
 	// setup

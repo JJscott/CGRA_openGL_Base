@@ -13,6 +13,19 @@
 #include <GLFW/glfw3.h>
 
 
+// helper function that draws an empty OpenGL object
+// can be used for shaders that do all the work
+inline void draw_dummy(unsigned instances = 1) {
+	static GLuint vao = 0;
+	if (vao == 0) {
+		glGenVertexArrays(1, &vao);
+	}
+	glBindVertexArray(vao);
+	glDrawArraysInstanced(GL_POINTS, 0, 1, instances);
+	glBindVertexArray(0);
+}
+
+
 // gl_object is a helper class that wraps around a GLuint
 // object id for OpenGL. Does not allow copying (can't be
 // owned by more than one thing) and deallocates the object

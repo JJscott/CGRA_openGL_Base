@@ -13,7 +13,7 @@
 
 namespace cgra {
 
-	mesh_data load_wavefront_mesh_data(const std::string &filename) {
+	inline mesh_data load_wavefront_mesh_data(const std::string &filename) {
 
 		// struct for storing wavefront index data
 		struct wavefront_vertex {
