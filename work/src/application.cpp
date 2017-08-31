@@ -107,23 +107,26 @@ Axis::Axis() {
 	m_shader = prog.compile();
 
 	// load mesh
-	m_mesh.m_mode = GL_LINES;
-	m_mesh.m_vertices = {
-		vertex(vec3(0, 0, 0), vec3(1, 0, 0)),
-		vertex(vec3(1e+15, 0, 0), vec3(1, 0, 0)),
-		vertex(vec3(-1e+15, 0, 0), vec3(1, 0, 0)),
-		vertex(vec3(0, 0, 0), vec3(0, 1, 0)),
-		vertex(vec3(0, 1e+15, 0), vec3(0, 1, 0)),
-		vertex(vec3(0, -1e+15, 0), vec3(0, 1, 0)),
-		vertex(vec3(0, 0, 0), vec3(0, 0, 1)),
-		vertex(vec3(0, 0, 1e+15), vec3(0, 0, 1)),
-		vertex(vec3(0, 0, -1e+15), vec3(0, 0, 1))
+	mesh_data md;
+	md.m_vertices = {
+		vertex_data(vec3(0, 0, 0), vec3(1, 0, 0)),
+		vertex_data(vec3(1e+15, 0, 0), vec3(1, 0, 0)),
+		vertex_data(vec3(-1e+15, 0, 0), vec3(1, 0, 0)),
+		vertex_data(vec3(0, 0, 0), vec3(0, 1, 0)),
+		vertex_data(vec3(0, 1e+15, 0), vec3(0, 1, 0)),
+		vertex_data(vec3(0, -1e+15, 0), vec3(0, 1, 0)),
+		vertex_data(vec3(0, 0, 0), vec3(0, 0, 1)),
+		vertex_data(vec3(0, 0, 1e+15), vec3(0, 0, 1)),
+		vertex_data(vec3(0, 0, -1e+15), vec3(0, 0, 1))
 	};
-	m_mesh.m_indices = {
+	md.m_indices = {
 		0, 1,   0, 2,
 		3, 4,   3, 5,
 		6, 7,   6, 8
 	};
+	md.m_mode = GL_LINES;
+	md.m_wireframe = false;
+	m_mesh = md.upload();
 }
 
 
@@ -142,7 +145,6 @@ void Axis::draw(const mat4 &view, const mat4 &proj) {
 }
 
 
-
 TestQuad::TestQuad() {
 
 	// compile shader
@@ -156,18 +158,21 @@ TestQuad::TestQuad() {
 	m_texture = img.upload_texture();
 
 	// load mesh
-	m_mesh.m_mode = GL_TRIANGLES;
-	m_mesh.m_vertices = {
-		vertex(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
-		vertex(vec3(1, -1, 0), vec3(0, 0, 1), vec2(1, 0)),
-		vertex(vec3(1,  1, 0), vec3(0, 0, 1), vec2(1, 1)),
-		vertex(vec3(-1,  1, 0), vec3(0, 0, 1), vec2(0, 1))
+	mesh_data md;
+	md.m_vertices = {
+		vertex_data(vec3(-1, -1, 0), vec3(0, 0, 1), vec2(0, 0)),
+		vertex_data(vec3(1, -1, 0), vec3(0, 0, 1), vec2(1, 0)),
+		vertex_data(vec3(1,  1, 0), vec3(0, 0, 1), vec2(1, 1)),
+		vertex_data(vec3(-1,  1, 0), vec3(0, 0, 1), vec2(0, 1))
 	};
-	m_mesh.m_indices = {
+	md.m_indices = {
 		0, 1, 2,
 		3, 0, 2
 	};
-	m_mesh.reupload();
+	md.m_mode = GL_TRIANGLES;
+	md.m_wireframe = false;
+
+	m_mesh = md.upload(m_mesh);
 }
 
 

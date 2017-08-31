@@ -16,6 +16,8 @@ set(sources
 	"cgra_shader.cpp"
 
 	"cgra_util.hpp"
+
+	"cgra_wavefront_loader.hpp"
 )
 
 # Add these sources to the project target

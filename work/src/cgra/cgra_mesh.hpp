@@ -10,48 +10,48 @@
 
 namespace cgra {
 
-	struct vertex {
+	struct mesh {
+		// GL buffer ids
+		GLuint m_vao = 0;
+		GLuint m_vbo = 0;
+		GLuint m_ibo = 0;
+
+		// index count (how much to draw)
+		int m_index_count;
+
+		// mode to draw in
+		GLenum m_mode = 0;
+		bool m_wireframe = false;
+
+		void draw();
+		void destroy();
+	};
+
+	struct vertex_data {
 		vec3 pos;
 		vec3 norm;
 		vec2 uv;
-		vertex(vec3 p = {}, vec3 n = {}, vec2 t = {})
+		vertex_data(vec3 p = {}, vec3 n = {}, vec2 t = {})
 			: pos(p), norm(n), uv(t){ }
-		vertex(vec3 p, vec2 t)
+		vertex_data(vec3 p, vec2 t)
 			: pos(p), norm(0, 0, 1), uv(t) { }
 	};
 
-	class mesh {
-		private:
-			gl_object m_vao;
-			gl_object m_vbo;
-			gl_object m_ibo;
-			int m_primitive_count;
-
+	class mesh_data {
 		public:
-			std::vector<vertex> m_vertices;
+			std::vector<vertex_data> m_vertices;
 			std::vector<unsigned int> m_indices;
-			GLenum m_mode = 0;
-			bool m_wireframe = false;
+			GLenum m_mode;
+			bool m_wireframe;
 
-			mesh(
+			mesh_data(
+				const std::vector<vertex_data> &vertices = {},
+				const std::vector<unsigned int> &indices = {},
 				GLenum mode = GL_TRIANGLES,
-				const std::vector<vertex> &vertices = {},
-				const std::vector<unsigned int> &indices = {}
+				bool wireframe = false
 			);
 
-			~mesh() { } // not needed, but the copy ctors are (because of gl_object)
-
-			// copy ctors
-			mesh(const mesh &);
-			mesh & operator=(const mesh &);
-
-			// move ctors
-			mesh(mesh &&other) = default;
-			mesh & operator=(mesh &&other) = default;
-
-			void reupload();
-
-			void draw();
+			mesh upload(mesh m = {});
 	};
 
 }

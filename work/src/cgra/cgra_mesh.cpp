@@ -6,74 +6,47 @@
 #include "cgra_mesh.hpp"
 
 
-using namespace std;
-
-
-// helper function
-// returns the correct number of primitives given vertex index count and draw mode
-int primitive_count(int index_count, GLuint mode) {
-	// Set primitive count
-	int patch_size;
-	switch (mode) {
-	case GL_POINTS:
-	case GL_LINE_LOOP:
-		return index_count;
-	case GL_LINES:
-	case GL_LINES_ADJACENCY:
-	case GL_LINE_STRIP:
-	case GL_LINE_STRIP_ADJACENCY:
-		return index_count - 1;
-	case GL_TRIANGLES:
-	case GL_TRIANGLES_ADJACENCY:
-		return index_count / 3;
-	case GL_TRIANGLE_FAN:
-	case GL_TRIANGLE_STRIP:
-	case GL_TRIANGLE_STRIP_ADJACENCY:
-		return index_count - 2;
-	case GL_PATCHES:
-		glGetIntegerv(GL_PATCH_VERTICES, &patch_size);
-		return index_count / patch_size;
-	default:
-		throw runtime_error("Error: GLenum 'mode' is invalid");
-	}
-}
-
 namespace cgra {
 
-	mesh::mesh(GLenum mode, const std::vector<vertex> &vertices, const std::vector<unsigned int> &indices)
-		: m_mode(mode), m_vertices(vertices), m_indices(indices) { }
-
-	// copy ctors
-	mesh::mesh(const mesh &other)
-		: m_vertices(other.m_vertices), m_indices(other.m_indices), m_mode(other.m_mode), m_wireframe(other.m_wireframe) { }
-
-	mesh & mesh::operator=(const mesh &other) {
-		m_vao = {};
-		m_vbo = {};
-		m_ibo = {};
-
-		m_vertices = other.m_vertices;
-		m_indices = other.m_indices;
-
-		m_mode = other.m_mode;
-		m_wireframe = other.m_wireframe;
-
-		return *this;
+	void mesh::draw() {
+		// set wireframe or fill polygon mode
+		glPolygonMode(GL_FRONT_AND_BACK, (m_wireframe) ? GL_LINE : GL_FILL);
+		// bind our VAO which sets up all our buffers and data for us
+		glBindVertexArray(m_vao);
+		// tell opengl to draw our VAO using the draw mode and how many verticies to render
+		glDrawElements(m_mode, m_index_count, GL_UNSIGNED_INT, 0); // with indices
 	}
 
-	void mesh::reupload() {
+	void mesh::destroy() {
+		// delete the data buffers
+		glDeleteVertexArrays(1, &m_vao);
+		glDeleteBuffers(1, &m_vbo);
+		glDeleteBuffers(1, &m_ibo);
+	}
 
-		// Create Vertex Array Object (VAO) that can hold information
-		// about how the VBOs are set up
 
-		// Create a VAO, uses glGenVertexArrays(1, &m_vao);
-		if (!m_vao) m_vao = gl_object::gen_vertex_array();
+	mesh_data::mesh_data(
+		const std::vector<vertex_data> &vertices,
+		const std::vector<unsigned int> &indices,
+		GLenum mode,
+		bool wireframe
+	) :
+		m_vertices(vertices),
+		m_indices(indices),
+		m_mode(mode),
+		m_wireframe(wireframe)
+	{ }
 
-		// Create a vertex attribute buffer in GPU memory, uses glGenBuffers(1, &m_vbo);
-		if (!m_vbo) m_vbo = gl_object::gen_buffer();
 
-		// Create an index buffer in GPU memory, uses glGenBuffers(1, &m_ibo);
-		if (!m_ibo) m_ibo = gl_object::gen_buffer();
+	mesh mesh_data::upload(mesh m) {
+
+		// Create the buffers if they don't exist
+		// VAO stores information about how the VBOs are set up
+		if (!m.m_vao) glGenVertexArrays(1, &m.m_vao);
+		// VBO(s) stores the vertices
+		if (!m.m_vbo) glGenBuffers(1, &m.m_vbo);
+		// IBO stores the indices that make up primitives
+		if (!m.m_ibo) glGenBuffers(1, &m.m_ibo);
 
 		// Compile the vertex data into a single vector
 		size_t vertex_length = 3 + 3 + 2; // pos, norm, uv (8 floats)
@@ -93,16 +66,14 @@ namespace cgra {
 		}
 
 
-
 		// VAO
 		//
-		glBindVertexArray(m_vao);
+		glBindVertexArray(m.m_vao);
 
 		
-
 		// VBO (single buffer, interleaved)
 		//
-		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m.m_vbo);
 		// Upload ALL the data giving it the size (in bytes) and a pointer to the data
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), &vertex_data[0], GL_STATIC_DRAW);
 
@@ -122,33 +93,22 @@ namespace cgra {
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_length, (void*)(sizeof(float) * 6));
 
 
-
 		// IBO
 		//
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.m_ibo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_indices.size(), &m_indices[0], GL_STATIC_DRAW);
 
 
-
-		// Recalcuate number of primitives based on index
-		m_primitive_count = primitive_count(m_indices.size(), m_mode);
+		// Set the index count and draw modes
+		m.m_index_count = m_indices.size();
+		m.m_mode = m_mode;
+		m.m_wireframe = m_wireframe;
 
 		// Clean up by binding 0, good practice
 		// the GL_ELEMENT_ARRAY_BUFFER binding sticks to the VAO so we shouldn't unbind it
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
 
-
-	void mesh::draw() {
-
-		if (!m_vao) reupload();
-
-		// Set wireframe or fill polygon mode
-		glPolygonMode(GL_FRONT_AND_BACK, (m_wireframe) ? GL_LINE : GL_FILL);
-		// Bind our VAO which sets up all our buffers and data for us
-		glBindVertexArray(m_vao);
-		// Tell opengl to draw our VAO using the draw mode and how many verticies to render
-		glDrawElements(m_mode, m_indices.size(), GL_UNSIGNED_INT, 0); // with indices
+		return m;
 	}
 }
