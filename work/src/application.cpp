@@ -22,13 +22,6 @@ Application::Application() {
 	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/axis.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/axis.glsl");
 	m_axis_shader = prog.upload_shader();
-
-	// compile aabb shader
-	prog = shader_program();
-	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/aabb.glsl");
-	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/aabb.glsl");
-	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/aabb.glsl");
-	m_aabb_shader = prog.upload_shader();
 }
 
 
@@ -108,21 +101,8 @@ void Application::render(int width, int height) {
 		draw_dummy(6);
 	}
 
-	// draw the AABB
-	if (m_show_aabb) {
-		// load shader and variables
-		glUseProgram(m_aabb_shader);
-		glUniformMatrix4fv(glGetUniformLocation(m_aabb_shader, "uProjectionMatrix"), 1, false, proj.data());
-		glUniformMatrix4fv(glGetUniformLocation(m_aabb_shader, "uModelViewMatrix"), 1, false, view.data());
-		glUniform3fv(glGetUniformLocation(m_aabb_shader, "uMin"), 1, m_test_teapot.m_min.data());
-		glUniform3fv(glGetUniformLocation(m_aabb_shader, "uMax"), 1, m_test_teapot.m_max.data());
-		// the shader requires 12 instances to draw all 12 lines for the aabb
-		// geometry is created inside the shader
-		draw_dummy(12);
-	}
-
 	// draw the teapot
-	m_test_teapot.draw(view, proj, m_wireframe);
+	m_test_teapot.draw(view, proj);
 }
 
 
@@ -133,16 +113,19 @@ void Application::renderGUI() {
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
 	ImGui::Begin("Camera", 0);
 
-	// Display current camera parameters
+	// display current camera parameters
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SliderFloat("Pitch", &m_pitch, float(-pi/2), float(pi/2), "%.2f");
 	ImGui::SliderFloat("Yaw", &m_yaw, float(-pi), float(pi), "%.2f");
 	ImGui::SliderFloat("Distance", &m_distance, 0, 100, "%.2f", 2.0f);
 
-	// Extra drawing parameters
+	// extra drawing parameters
 	ImGui::Checkbox("Show Axis", &m_show_axis);
-	ImGui::Checkbox("Show Wireframe", &m_wireframe);
-	ImGui::Checkbox("Show AABB", &m_show_aabb);
+	ImGui::SameLine();
+	ImGui::Checkbox("Show Wireframe", &m_test_teapot.m_show_wireframe);
+	ImGui::Checkbox("Show AABB", &m_test_teapot.m_show_abb);
+	ImGui::SameLine();
+	ImGui::Checkbox("Show Texture", &m_test_teapot.m_show_texture);
 
 	// finish creating window
 	ImGui::End();
@@ -151,11 +134,24 @@ void Application::renderGUI() {
 
 Teapot::Teapot() {
 
-	// compile shader
+	// compile grey shader
 	shader_program prog;
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_texture.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_texture.glsl");
-	m_shader = prog.upload_shader();
+	m_grey_shader = prog.upload_shader();
+
+	// compile texture shader
+	prog = shader_program();
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_grey.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_grey.glsl");
+	m_texture_shader = prog.upload_shader();
+
+	// compile aabb shader
+	prog = shader_program();
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/aabb.glsl");
+	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/aabb.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/aabb.glsl");
+	m_aabb_shader = prog.upload_shader();
 
 	// load texture
 	//image<float, 4> img("work/res/textures/uv_texture.jpg");
@@ -177,21 +173,38 @@ Teapot::Teapot() {
 }
 
 
-void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj, bool wireframe) {
+void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 
 	// create the model/view matrix
 	mat4 modelview = view;
 
 	// load shader and variables
-	glUseProgram(m_shader);
-	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uProjectionMatrix"), 1, false, proj.data());
-	glUniformMatrix4fv(glGetUniformLocation(m_shader, "uModelViewMatrix"), 1, false, modelview.data());
+	GLuint shader = (m_show_texture) ? m_texture_shader : m_grey_shader;
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, modelview.data());
 
 	// load texture
 	glActiveTexture(GL_TEXTURE0); // Set the location for binding the texture
 	glBindTexture(GL_TEXTURE_2D, m_texture); // Bind the texture
-	glUniform1i(glGetUniformLocation(m_shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
+	glUniform1i(glGetUniformLocation(shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
+
+
+	// draw the AABB
+	if (m_show_abb) {
+		// load shader and variables
+		glUseProgram(m_aabb_shader);
+		glUniformMatrix4fv(glGetUniformLocation(m_aabb_shader, "uProjectionMatrix"), 1, false, proj.data());
+		glUniformMatrix4fv(glGetUniformLocation(m_aabb_shader, "uModelViewMatrix"), 1, false, modelview.data());
+		glUniform3fv(glGetUniformLocation(m_aabb_shader, "uMin"), 1, m_min.data());
+		glUniform3fv(glGetUniformLocation(m_aabb_shader, "uMax"), 1, m_max.data());
+		// the shader requires 12 instances to draw all 12 lines for the aabb
+		// geometry is created inside the shader
+		draw_dummy(12);
+	}
+
+
 
 	// draw
-	m_mesh.draw(wireframe);
+	m_mesh.draw(m_show_wireframe);
 }

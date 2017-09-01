@@ -11,17 +11,24 @@
 //
 class Teapot {
 private:
-	GLuint m_shader;
+	// shaders
+	GLuint m_texture_shader = 0;
+	GLuint m_grey_shader = 0;
+	GLuint m_aabb_shader = 0;
+
+	// data
 	GLuint m_texture;
 	cgra::mesh m_mesh;
-
-public:
 	cgra::vec3 m_min;
 	cgra::vec3 m_max;
 
-	Teapot();
-	void draw(const cgra::mat4 &view, const cgra::mat4 &proj, bool wireframe);
+public:
+	bool m_show_abb;
+	bool m_show_texture;
+	bool m_show_wireframe;
 
+	Teapot();
+	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);
 };
 
 
@@ -42,12 +49,7 @@ private:
 	bool m_show_axis = false;
 	GLuint m_axis_shader = 0;
 
-	// aabb
-	bool m_show_aabb = false;
-	GLuint m_aabb_shader = 0;
-
 	// geometry
-	bool m_wireframe = false;
 	Teapot m_test_teapot;
 
 public:
