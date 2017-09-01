@@ -136,14 +136,14 @@ Teapot::Teapot() {
 
 	// compile grey shader
 	shader_program prog;
-	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_texture.glsl");
-	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_texture.glsl");
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_grey.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_grey.glsl");
 	m_grey_shader = prog.upload_shader();
 
 	// compile texture shader
 	prog = shader_program();
-	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_grey.glsl");
-	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_grey.glsl");
+	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_texture.glsl");
+	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_texture.glsl");
 	m_texture_shader = prog.upload_shader();
 
 	// compile aabb shader
@@ -178,17 +178,6 @@ void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 	// create the model/view matrix
 	mat4 modelview = view;
 
-	// load shader and variables
-	GLuint shader = (m_show_texture) ? m_texture_shader : m_grey_shader;
-	glUseProgram(shader);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, modelview.data());
-
-	// load texture
-	glActiveTexture(GL_TEXTURE0); // Set the location for binding the texture
-	glBindTexture(GL_TEXTURE_2D, m_texture); // Bind the texture
-	glUniform1i(glGetUniformLocation(shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
-
 
 	// draw the AABB
 	if (m_show_abb) {
@@ -204,6 +193,16 @@ void Teapot::draw(const cgra::mat4 &view, const cgra::mat4 &proj) {
 	}
 
 
+	// load shader and variables
+	GLuint shader = (m_show_texture) ? m_texture_shader : m_grey_shader;
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, proj.data());
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, modelview.data());
+
+	// load texture
+	glActiveTexture(GL_TEXTURE0); // Set the location for binding the texture
+	glBindTexture(GL_TEXTURE_2D, m_texture); // Bind the texture
+	glUniform1i(glGetUniformLocation(shader, "uTexture0"), 0);  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
 
 	// draw
 	m_mesh.draw(m_show_wireframe);

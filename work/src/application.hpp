@@ -23,9 +23,9 @@ private:
 	cgra::vec3 m_max;
 
 public:
-	bool m_show_abb;
-	bool m_show_texture;
-	bool m_show_wireframe;
+	bool m_show_abb = false;
+	bool m_show_texture = false;
+	bool m_show_wireframe = false;
 
 	Teapot();
 	void draw(const cgra::mat4 &view, const cgra::mat4 &proj);

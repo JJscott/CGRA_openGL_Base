@@ -62,17 +62,16 @@ namespace cgra {
 
 			const GLchar *vertex_shader =
 				"#version 330\n"
-				"uniform mat4 ProjMtx;\n"
-				"in vec2 Position;\n"
-				"in vec2 UV;\n"
-				"in vec4 Color;\n"
+				"uniform mat4 uProjectionMatrix;\n"
+				"in vec2 vPosition;\n"
+				"in vec2 vUV;\n"
+				"in vec4 vColor;\n"
 				"out vec2 Frag_UV;\n"
 				"out vec4 Frag_Color;\n"
-				"void main()\n"
-				"{\n"
-				"   Frag_UV = UV;\n"
-				"   Frag_Color = Color;\n"
-				"   gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
+				"void main() {\n"
+				"   Frag_UV = vUV;\n"
+				"   Frag_Color = vColor;\n"
+				"   gl_Position = uProjectionMatrix * vec4(vPosition.xy,0,1);\n"
 				"}\n";
 
 			const GLchar* fragment_shader =
@@ -81,8 +80,7 @@ namespace cgra {
 				"in vec2 Frag_UV;\n"
 				"in vec4 Frag_Color;\n"
 				"out vec4 Out_Color;\n"
-				"void main()\n"
-				"{\n"
+				"void main() {\n"
 				"   Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
 				"}\n";
 
@@ -98,10 +96,10 @@ namespace cgra {
 			glLinkProgram(g_shaderHandle);
 
 			g_attribLocationTex = glGetUniformLocation(g_shaderHandle, "Texture");
-			g_attribLocationProjMtx = glGetUniformLocation(g_shaderHandle, "ProjMtx");
-			g_attribLocationPosition = glGetAttribLocation(g_shaderHandle, "Position");
-			g_attribLocationUV = glGetAttribLocation(g_shaderHandle, "UV");
-			g_attribLocationColor = glGetAttribLocation(g_shaderHandle, "Color");
+			g_attribLocationProjMtx = glGetUniformLocation(g_shaderHandle, "uProjectionMatrix");
+			g_attribLocationPosition = glGetAttribLocation(g_shaderHandle, "vPosition");
+			g_attribLocationUV = glGetAttribLocation(g_shaderHandle, "vUV");
+			g_attribLocationColor = glGetAttribLocation(g_shaderHandle, "vColor");
 
 			glGenBuffers(1, &g_vboHandle);
 			glGenBuffers(1, &g_elementsHandle);
@@ -157,7 +155,8 @@ namespace cgra {
 
 
 		void renderDrawLists(ImDrawData* draw_data) {
-			// avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+			// avoid rendering when minimized, scale coordinates for
+			// retina displays (screen coordinates != framebuffer coordinates)
 			ImGuiIO& io = ImGui::GetIO();
 			int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
 			int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
@@ -166,38 +165,39 @@ namespace cgra {
 			draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
 			// backup GL state
-			GLint last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
+			GLenum last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&last_active_texture);
 			glActiveTexture(GL_TEXTURE0);
 			GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
 			GLint last_texture; glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 			GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
 			GLint last_element_array_buffer; glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
 			GLint last_vertex_array; glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
-			GLint last_blend_src_rgb; glGetIntegerv(GL_BLEND_SRC_RGB, &last_blend_src_rgb);
-			GLint last_blend_dst_rgb; glGetIntegerv(GL_BLEND_DST_RGB, &last_blend_dst_rgb);
-			GLint last_blend_src_alpha; glGetIntegerv(GL_BLEND_SRC_ALPHA, &last_blend_src_alpha);
-			GLint last_blend_dst_alpha; glGetIntegerv(GL_BLEND_DST_ALPHA, &last_blend_dst_alpha);
-			GLint last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
-			GLint last_blend_equation_alpha; glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
+			GLint last_polygon_mode[2]; glGetIntegerv(GL_POLYGON_MODE, last_polygon_mode);
 			GLint last_viewport[4]; glGetIntegerv(GL_VIEWPORT, last_viewport);
 			GLint last_scissor_box[4]; glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
+			GLenum last_blend_src_rgb; glGetIntegerv(GL_BLEND_SRC_RGB, (GLint*)&last_blend_src_rgb);
+			GLenum last_blend_dst_rgb; glGetIntegerv(GL_BLEND_DST_RGB, (GLint*)&last_blend_dst_rgb);
+			GLenum last_blend_src_alpha; glGetIntegerv(GL_BLEND_SRC_ALPHA, (GLint*)&last_blend_src_alpha);
+			GLenum last_blend_dst_alpha; glGetIntegerv(GL_BLEND_DST_ALPHA, (GLint*)&last_blend_dst_alpha);
+			GLenum last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, (GLint*)&last_blend_equation_rgb);
+			GLenum last_blend_equation_alpha; glGetIntegerv(GL_BLEND_EQUATION_ALPHA, (GLint*)&last_blend_equation_alpha);
 			GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
 			GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
 			GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
 			GLboolean last_enable_scissor_test = glIsEnabled(GL_SCISSOR_TEST);
 
-			// setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
+			// setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, polygon fill
 			glEnable(GL_BLEND);
 			glBlendEquation(GL_FUNC_ADD);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_CULL_FACE);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_SCISSOR_TEST);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			// setup viewport, orthographic projection matrix
 			glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
-			const float ortho_projection[4][4] =
-			{
+			const float ortho_projection[4][4] = {
 				{ 2.0f / io.DisplaySize.x, 0.0f,                   0.0f, 0.0f },
 				{ 0.0f,                  2.0f / -io.DisplaySize.y, 0.0f, 0.0f },
 				{ 0.0f,                  0.0f,                  -1.0f, 0.0f },
@@ -208,8 +208,7 @@ namespace cgra {
 			glUniformMatrix4fv(g_attribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
 			glBindVertexArray(g_vaoHandle);
 
-			for (int n = 0; n < draw_data->CmdListsCount; n++)
-			{
+			for (int n = 0; n < draw_data->CmdListsCount; n++) {
 				const ImDrawList* cmd_list = draw_data->CmdLists[n];
 				const ImDrawIdx* idx_buffer_offset = 0;
 
@@ -219,15 +218,12 @@ namespace cgra {
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_elementsHandle);
 				glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
 
-				for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
-				{
+				for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
 					const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-					if (pcmd->UserCallback)
-					{
+					if (pcmd->UserCallback) {
 						pcmd->UserCallback(cmd_list, pcmd);
 					}
-					else
-					{
+					else {
 						glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
 						glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
 						glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
@@ -249,6 +245,7 @@ namespace cgra {
 			if (last_enable_cull_face) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE);
 			if (last_enable_depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
 			if (last_enable_scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
+			glPolygonMode(GL_FRONT_AND_BACK, last_polygon_mode[0]);
 			glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
 			glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
 		}
@@ -324,7 +321,8 @@ namespace cgra {
 			io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
 			io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
-			// alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
+			// alternatively you can set this to NULL and call ImGui::GetDrawData()
+			// after ImGui::Render() to get the same ImDrawData pointer.
 			io.RenderDrawListsFn = renderDrawLists;
 			io.SetClipboardTextFn = setClipboardText;
 			io.GetClipboardTextFn = getClipboardText;
@@ -360,17 +358,22 @@ namespace cgra {
 			g_time = current_time;
 
 			// setup inputs
-			// (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
+			// we already got mouse wheel, keyboard keys & characters
+			// from glfw callbackspolled in glfwPollEvents()
 			if (glfwGetWindowAttrib(g_window, GLFW_FOCUSED)) {
 				double mouse_x, mouse_y;
 				glfwGetCursorPos(g_window, &mouse_x, &mouse_y);
-				io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+				// Mouse position in screen coordinates
+				// (set to -1,-1 if no mouse / on another screen, etc.)
+				io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);
 			} else {
 				io.MousePos = ImVec2(-1,-1);
 			}
 
 			for (int i = 0; i < 3; i++) {
-				io.MouseDown[i] = g_mousePressed[i] || glfwGetMouseButton(g_window, i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+				// If a mouse press event came, always pass it as "mouse held this frame",
+				// so we don't miss click-release events that are shorter than 1 frame.
+				io.MouseDown[i] = g_mousePressed[i] || glfwGetMouseButton(g_window, i) != 0;
 				g_mousePressed[i] = false;
 			}
 

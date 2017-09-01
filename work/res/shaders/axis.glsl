@@ -18,7 +18,7 @@ void main() {
 layout(points) in;
 layout(line_strip, max_vertices = 2) out;
 
-in int v_instanceID[];
+flat in int v_instanceID[];
 
 out vec3 v_color;
 
