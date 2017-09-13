@@ -13,7 +13,7 @@
 
 namespace cgra {
 
-	inline mesh_data load_wavefront_mesh_data(const std::string &filename) {
+	inline mesh_builder load_wavefront_data(const std::string &filename) {
 
 		// struct for storing wavefront index data
 		struct wavefront_vertex {
@@ -47,7 +47,7 @@ namespace cgra {
 
 			// Reading like this means whitespace at the start of the line is fine
 			// attempting to read from an empty string/line will set the failbit
-			if (!objLine.fail()) {
+			if (objLine.good()) {
 
 
 				if (mode == "v") {
@@ -74,7 +74,9 @@ namespace cgra {
 						wavefront_vertex v;
 
 						// scan in position index
-						objLine >> v.p; 
+						objLine >> v.p;
+						if (objLine.fail()) break;
+
 						// look ahead for a match
 						if (objLine.peek() == '/') {	
 							// ignore the '/' character
@@ -149,10 +151,8 @@ namespace cgra {
 			}
 		}
 
-
-
 		// create mesh data
-		std::vector<vertex_data> vertices;
+		std::vector<vertex> vertices;
 		std::vector<unsigned int> indices;
 
 		for (unsigned int i = 0; i < wv_vertices.size(); ++i) {
@@ -164,6 +164,7 @@ namespace cgra {
 			);
 		}
 
-		return mesh_data(vertices, indices, GL_TRIANGLES);
+		return mesh_builder(vertices, indices, GL_TRIANGLES);
 	}
+
 }

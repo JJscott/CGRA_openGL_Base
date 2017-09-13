@@ -17,20 +17,24 @@ public:
 	explicit shader_error(const std::string &what_ = "Generic shader error.") : std::runtime_error(what_) { }
 };
 
+
 class shader_type_error : public shader_error {
 public:
 	explicit shader_type_error(const std::string &what_ = "Bad shader type.") : shader_error(what_) { }
 };
+
 
 class shader_compile_error : public shader_error {
 public:
 	explicit shader_compile_error(const std::string &what_ = "Shader compilation failed.") : shader_error(what_) { }
 };
 
+
 class shader_link_error : public shader_error {
 public:
 	explicit shader_link_error(const std::string &what_ = "Shader program linking failed.") : shader_error(what_) { }
 };
+
 
 void printShaderInfoLog(GLuint obj) {
 	int infologLength = 0;
@@ -42,6 +46,7 @@ void printShaderInfoLog(GLuint obj) {
 		std::cout << "CGRA Shader : " << "SHADER :\n" << &infoLog[0] << std::endl;
 	}
 }
+
 
 void printProgramInfoLog(GLuint obj) {
 	int infologLength = 0;
@@ -57,7 +62,7 @@ void printProgramInfoLog(GLuint obj) {
 
 namespace cgra {
 
-	void shader_program::set_shader(GLenum type, const std::string &filename) {
+	void shader_builder::set_shader(GLenum type, const std::string &filename) {
 		std::ifstream fileStream(filename);
 
 		if (!fileStream) {
@@ -77,7 +82,8 @@ namespace cgra {
 		}
 	}
 
-	void shader_program::set_shader_source(GLenum type, const std::string &source) {
+
+	void shader_builder::set_shader_source(GLenum type, const std::string &source) {
 
 		// same as GLint shader = glCreateShader(type);
 		gl_object shader = gl_object::gen_shader(type);
@@ -131,8 +137,26 @@ namespace cgra {
 		m_shaders[type] = std::make_shared<gl_object>(std::move(shader));
 	}
 
-	GLuint shader_program::upload_shader() {
-		GLuint program = glCreateProgram();
+
+	GLuint shader_builder::build(GLuint program) {
+
+		// if the program exists get attached shaders and detach them
+		if (program) {
+			int shader_count = 0;
+			glGetProgramiv(program, GL_ATTACHED_SHADERS, &shader_count);
+
+			if (shader_count > 0) {
+				std::vector<GLuint> attached_shaders(shader_count);
+				int actual_shader_count = 0;
+				glGetAttachedShaders(program, shader_count, &actual_shader_count, attached_shaders.data());
+				for (int i = 0; i < actual_shader_count; i++) {
+					glDetachShader(program, attached_shaders[i]);
+				}
+			}
+		}
+		else {
+			program = glCreateProgram();
+		}
 
 		// attach shaders
 		for (auto &shader_pair : m_shaders) {
@@ -150,4 +174,5 @@ namespace cgra {
 
 		return program;
 	}
+
 }

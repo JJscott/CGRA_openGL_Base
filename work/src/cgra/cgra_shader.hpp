@@ -12,16 +12,16 @@
 
 namespace cgra {
 
-	class shader_program {
+	class shader_builder {
 	private:
 		std::map<GLenum, std::shared_ptr<gl_object>> m_shaders;
 
 	public:
-		shader_program() { }
+		shader_builder() { }
 		void set_shader(GLenum type, const std::string &filename);
 		void set_shader_source(GLenum type, const std::string &shadersource);
 
-		GLuint upload_shader();
+		GLuint build(GLuint program = 0);
 	};
 
 }

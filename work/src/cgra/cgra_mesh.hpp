@@ -26,34 +26,52 @@ namespace cgra {
 		// mode to draw in
 		GLenum m_mode = 0;
 
+		// calls the draw function and optionally sets the 
+		// draw mode to lines instead of polygons
 		void draw(bool wireframe = false);
+
+		// deallocates the vertex buffer and vertex array objects
 		void destroy();
 	};
 
 
-	struct vertex_data {
+	struct vertex {
 		vec3 pos;
 		vec3 norm;
 		vec2 uv;
-		vertex_data(vec3 p = {}, vec3 n = {}, vec2 t = {})
+		vertex(vec3 p = {}, vec3 n = {}, vec2 t = {})
 			: pos(p), norm(n), uv(t){ }
-		vertex_data(vec3 p, vec2 t)
+		vertex(vec3 p, vec2 t)
 			: pos(p), norm(0, 0, 1), uv(t) { }
 	};
 
-	class mesh_data {
-		public:
-			std::vector<vertex_data> m_vertices;
-			std::vector<unsigned int> m_indices;
-			GLenum m_mode;
 
-			mesh_data(
-				const std::vector<vertex_data> &vertices = {},
-				const std::vector<unsigned int> &indices = {},
-				GLenum mode = GL_TRIANGLES
-			);
+	// Mesh builder object. Used to create an Mesh
+	// by taking vertex and index information
+	// and uploading them to OpenGL
+	class mesh_builder {
+	private:
+		std::vector<vertex> m_vertices;
+		std::vector<unsigned int> m_indices;
+		GLenum m_mode;
 
-			mesh upload_mesh(mesh m = {});
+	public:
+		mesh_builder(
+			const std::vector<vertex> &vertices = {},
+			const std::vector<unsigned int> &indices = {},
+			GLenum mode = GL_TRIANGLES
+		);
+
+		std::vector<vertex> & vertices() { return m_vertices; }
+		const std::vector<vertex> & vertices() const { return m_vertices; }
+
+		std::vector<unsigned int> & indices() { return m_indices; }
+		const std::vector<unsigned int> & indices() const { return m_indices; }
+
+		GLenum & mode() { return m_mode; }
+		const GLenum & mode() const { return m_mode; }
+
+		mesh build(mesh m = {});
 	};
 
 }

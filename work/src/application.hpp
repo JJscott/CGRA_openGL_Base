@@ -36,6 +36,9 @@ public:
 //
 class Application {
 private:
+	// window
+	cgra::vec2 m_windowsize;
+
 	// oribital camera
 	float m_pitch = 0;
 	float m_yaw = 0;

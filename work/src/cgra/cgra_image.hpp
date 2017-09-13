@@ -52,6 +52,10 @@ namespace cgra {
 	}
 
 	template <typename T, size_t> class image;
+	using image1 = image<unsigned char, 1>;
+	using image2 = image<unsigned char, 2>;
+	using image3 = image<unsigned char, 3>;
+	using image4 = image<unsigned char, 4>;
 	using image1f = image<float, 1>;
 	using image2f = image<float, 2>;
 	using image3f = image<float, 3>;

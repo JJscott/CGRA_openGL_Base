@@ -18,6 +18,7 @@ namespace cgra {
 		}
 	}
 
+
 	// helper function to return a string from given arguments
 	// requires every argument has an overload for the '<<' operator
 	template <typename ...ArgTs>
@@ -26,4 +27,5 @@ namespace cgra {
 		detail::to_stream(oss, args...);
 		return oss.str();
 	}
+
 }

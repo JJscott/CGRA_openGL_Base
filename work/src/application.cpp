@@ -17,24 +17,26 @@ using namespace cgra;
 
 Application::Application() {
 	// compile axis shader
-	shader_program prog;
+	shader_builder prog;
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/axis.glsl");
 	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/axis.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/axis.glsl");
-	m_axis_shader = prog.upload_shader();
+	m_axis_shader = prog.build();
 }
 
 
 void Application::cursorPosCallback(double xpos, double ypos) {
 	if (m_leftMouseDown) {
-		// every pixel is a 1/5th of a degree of rotation
-		vec2 delta_radians = radians(vec2(xpos, ypos) - m_mousePosition) / 5;
+		vec2 whsize = m_windowsize / 2.0f;
 
 		// clamp the pitch to [-pi/2, pi/2]
-		m_pitch = float(clamp(m_pitch + delta_radians.y, -pi / 2, pi / 2));
+		m_pitch += float(acos(clamp((m_mousePosition.y - whsize.y) / whsize.y, -1.0f, 1.0f))
+			- acos(clamp((ypos - whsize.y) / whsize.y, -1.0f, 1.0f)));
+		m_pitch = float(clamp(m_pitch, -pi / 2, pi / 2));
 
 		// wrap the yaw to [-pi, pi]
-		m_yaw += float(delta_radians.x);
+		m_yaw += float(acos(clamp((m_mousePosition.x - whsize.x) / whsize.x, -1.0f, 1.0f))
+			- acos(clamp((xpos - whsize.x) / whsize.x, -1.0f, 1.0f)));
 		if (m_yaw > pi) m_yaw -= float(2 * pi);
 		else if (m_yaw < -pi) m_yaw += float(2 * pi);
 	}
@@ -57,7 +59,7 @@ void Application::scrollCallback(double xoffset, double yoffset) {
 	(void) xoffset; // currently un-used
 
 	// logrithmic zoom
-	float d = 100 * pow(pow(m_distance / 100, 0.5) - (yoffset/20), 2.0);
+	float d = float(100 * pow(pow(m_distance / 100, 0.5) - (yoffset/20), 2.0));
 	if (d == d && !isinf(d))
 		m_distance = clamp(d, 0, 100);
 }
@@ -74,6 +76,8 @@ void Application::charCallback(unsigned int c) {
 
 
 void Application::render(int width, int height) {
+	// update window size
+	m_windowsize = vec2(width, height);
 	
 	// ensure we draw to the entire 
 	glViewport(0, 0, width, height);
@@ -135,23 +139,23 @@ void Application::renderGUI() {
 Teapot::Teapot() {
 
 	// compile grey shader
-	shader_program prog;
+	shader_builder prog;
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_grey.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_grey.glsl");
-	m_grey_shader = prog.upload_shader();
+	m_grey_shader = prog.build();
 
 	// compile texture shader
-	prog = shader_program();
+	prog = shader_builder();
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/simple_texture.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/simple_texture.glsl");
-	m_texture_shader = prog.upload_shader();
+	m_texture_shader = prog.build();
 
 	// compile aabb shader
-	prog = shader_program();
+	prog = shader_builder();
 	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/aabb.glsl");
 	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/aabb.glsl");
 	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/aabb.glsl");
-	m_aabb_shader = prog.upload_shader();
+	m_aabb_shader = prog.build();
 
 	// load texture
 	//image<float, 4> img("work/res/textures/uv_texture.jpg");
@@ -159,13 +163,13 @@ Teapot::Teapot() {
 	m_texture = img.upload_texture();
 
 	// load mesh
-	mesh_data md = cgra::load_wavefront_mesh_data("work/res/assets/teapot.obj");
-	m_mesh = md.upload_mesh(m_mesh);
+	mesh_builder md = cgra::load_wavefront_mesh_data("work/res/assets/teapot.obj");
+	m_mesh = md.build(m_mesh);
 
 	// compute min/max
-	if (md.m_vertices.size()) {
-		m_min = m_max = md.m_vertices[0].pos;
-		for (auto &v : md.m_vertices) {
+	if (md.vertices().size()) {
+		m_min = m_max = md.vertices()[0].pos;
+		for (auto &v : md.vertices()) {
 			m_min = min(m_min, v.pos);
 			m_max = max(m_max, v.pos);
 		}

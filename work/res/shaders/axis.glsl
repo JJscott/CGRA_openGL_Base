@@ -5,7 +5,7 @@ uniform mat4 uModelViewMatrix;
 
 #ifdef _VERTEX_
 
-out int v_instanceID;
+flat out int v_instanceID;
 
 void main() {
 	v_instanceID = gl_InstanceID;

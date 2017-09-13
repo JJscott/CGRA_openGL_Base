@@ -25,8 +25,8 @@ namespace cgra {
 	}
 
 
-	mesh_data::mesh_data(
-		const std::vector<vertex_data> &vertices,
+	mesh_builder::mesh_builder(
+		const std::vector<vertex> &vertices,
 		const std::vector<unsigned int> &indices,
 		GLenum mode
 	) :
@@ -36,7 +36,7 @@ namespace cgra {
 	{ }
 
 
-	mesh mesh_data::upload_mesh(mesh m) {
+	mesh mesh_builder::build(mesh m) {
 
 		// Create the buffers if they don't exist
 		// VAO stores information about how the VBOs are set up
@@ -48,19 +48,19 @@ namespace cgra {
 
 		// Compile the vertex data into a single vector
 		size_t vertex_length = 3 + 3 + 2; // pos, norm, uv (8 floats)
-		std::vector<float> vertex_data(m_vertices.size() * vertex_length);
+		std::vector<float> vertices(m_vertices.size() * vertex_length);
 		for (size_t i = 0; i < m_vertices.size(); ++i) {
 			// positions
-			vertex_data[(i*vertex_length) + 0] = m_vertices[i].pos[0];
-			vertex_data[(i*vertex_length) + 1] = m_vertices[i].pos[1];
-			vertex_data[(i*vertex_length) + 2] = m_vertices[i].pos[2];
+			vertices[(i*vertex_length) + 0] = m_vertices[i].pos[0];
+			vertices[(i*vertex_length) + 1] = m_vertices[i].pos[1];
+			vertices[(i*vertex_length) + 2] = m_vertices[i].pos[2];
 			// normals
-			vertex_data[(i*vertex_length) + 3] = m_vertices[i].norm[0];
-			vertex_data[(i*vertex_length) + 4] = m_vertices[i].norm[1];
-			vertex_data[(i*vertex_length) + 5] = m_vertices[i].norm[2];
+			vertices[(i*vertex_length) + 3] = m_vertices[i].norm[0];
+			vertices[(i*vertex_length) + 4] = m_vertices[i].norm[1];
+			vertices[(i*vertex_length) + 5] = m_vertices[i].norm[2];
 			// uvs
-			vertex_data[(i*vertex_length) + 6] = m_vertices[i].uv[0];
-			vertex_data[(i*vertex_length) + 7] = m_vertices[i].uv[1];
+			vertices[(i*vertex_length) + 6] = m_vertices[i].uv[0];
+			vertices[(i*vertex_length) + 7] = m_vertices[i].uv[1];
 		}
 
 
@@ -73,7 +73,7 @@ namespace cgra {
 		//
 		glBindBuffer(GL_ARRAY_BUFFER, m.m_vbo);
 		// Upload ALL the data giving it the size (in bytes) and a pointer to the data
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), &vertex_data[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
 		// This buffer will use location=0 when we use our VAO
 		glEnableVertexAttribArray(0);
