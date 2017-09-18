@@ -37,17 +37,41 @@ namespace cgra {
 		template <> struct gl_type_format<unsigned int> : std::integral_constant<GLenum, GL_UNSIGNED_INT> { };
 		template <> struct gl_type_format<float> : std::integral_constant<GLenum, GL_FLOAT> { };
 
-
+		// default template
 		template <typename T>
-		struct stb_image_interpreter {
-			inline T operator()(float f) const { return T{ f }; }
-			inline T operator()(unsigned char c) const { return T{ c }; }
+		struct stb_image_type_converter {
+			inline T read(float f) const { return T(f); }
+			inline T read(unsigned char c) const { return T(c); }
+
+			inline void write(T t, unsigned char &out) const { out = unsigned char(t); }
+			inline void write(T t, float &out) const { out = float(t); }
 		};
 
 		template <>
-		struct stb_image_interpreter<float> {
-			inline float operator()(float f) const { return f; }
-			inline float operator()(unsigned char c) const { return c / 255.f; }
+		struct stb_image_type_converter<unsigned char> {
+			inline unsigned char read(float f) const { return unsigned char(f * 255); }
+			inline unsigned char read(unsigned char c) const { return c; }
+
+			inline void write(unsigned char t, unsigned char &out) const { out = t; }
+			inline void write(unsigned char t, float &out) const { out = t / 255.f; }
+		};
+
+		template <>
+		struct stb_image_type_converter<float> {
+			inline float read(float f) const { return f; }
+			inline float read(unsigned char c) const { return c / 255.f; }
+
+			inline void write(float t, unsigned char &out) const { out = unsigned char(clamp(t, 0.f, 1.f) * 255.f); }
+			inline void write(float t, float &out) const { out = t; }
+		};
+
+		template <>
+		struct stb_image_type_converter<double> {
+			inline double read(float f) const { return f; }
+			inline double read(unsigned char c) const { return c / 255.0; }
+
+			inline void write(double t, unsigned char &out) const { out = unsigned char(clamp(t, 0.0, 1.0) * 255.0); }
+			inline void write(double t, float &out) const { out = float(t); }
 		};
 	}
 
@@ -72,18 +96,17 @@ namespace cgra {
 		basic_vec<GLenum, 2> m_wrap {GL_REPEAT, GL_REPEAT};
 		std::vector<T> m_data;
 
-		// helper method
+		// helper methods
 		static int wrap_one(int i, int s, GLenum mode) {
 			using namespace cgra;
 			if (mode == GL_CLAMP_TO_EDGE) {
-				return max(min(i, s - 1), 0);
+				return clamp(i, s - 1, 0);
 			} else {
 				// repeat
-				// hacky, needs mod not remainder
-				return (i + 100 * s) % s;
+				// mod (plus s for negative term)
+				return i % s + (i < 0) ? s : 0;
 			}
 		}
-
 
 	public:
 		image() : m_size(-1, -1) { }
@@ -91,39 +114,42 @@ namespace cgra {
 		image(int w, int h) : m_size(w, h), m_data(m_size.x*m_size.y*N, 0) { }
 
 		image(const std::string &filename) : m_size(-1, -1) {
+			// vertical flipping
 			stbi_set_flip_vertically_on_load(true);
-			int w, h;
+			int w, h, n;
 
 			if (stbi_is_hdr(filename.c_str())) {
-				float *img = stbi_loadf(filename.c_str(), &w, &h, nullptr, N);
+				// floating point formats
+				float *img = stbi_loadf(filename.c_str(), &w, &h, &n, N);
 				if (!img) {
 					std::cerr << "Error: Failed to load image " << filename << " : " << stbi_failure_reason();
 					throw std::runtime_error("Failed to load image " + filename);
-				} else {
-					detail::stb_image_interpreter<T> interpreter;
-					m_data = std::vector<T>(w * h * N);
-					for (size_t i = 0; i < w * h * N; i++)
-						m_data[i] = interpreter(img[i]);
-					m_size = basic_vec<int, 2>(w, h);
-					stbi_image_free(img);
 				}
+				detail::stb_image_type_converter<T> converter;
+				m_data = std::vector<T>(w * h * N);
+				for (size_t i = 0; i < w * h * N; i++)
+					m_data[i] = converter.read(img[i]);
+				m_size = basic_vec<int, 2>(w, h);
+				stbi_image_free(img);
+
 			} else {
-				unsigned char *img = stbi_load(filename.c_str(), &w, &h, nullptr, N);
+				// byte (0-255) formats
+				unsigned char *img = stbi_load(filename.c_str(), &w, &h, &n, N);
 				if (!img) {
 					std::cerr << "Error: Failed to load image " << filename << " : " << stbi_failure_reason();
 					throw std::runtime_error("Failed to load image " + filename);
-				} else {
-					detail::stb_image_interpreter<T> interpreter;
-					m_data = std::vector<T>(w * h * N);
-					for (size_t i = 0; i < w * h * N; i++)
-						m_data[i] = interpreter(img[i]);
-					m_size = basic_vec<int, 2>(w, h);
-					stbi_image_free(img);
 				}
+
+				detail::stb_image_type_converter<T> converter;
+				m_data = std::vector<T>(w * h * N);
+				for (size_t i = 0; i < w * h * N; i++)
+					m_data[i] = converter.read(img[i]);
+				m_size = basic_vec<int, 2>(w, h);
+				stbi_image_free(img);
 			}
 		}
 
-		// Use to get a float pointer to the data
+		// use to get a float pointer to the data
 		T * data() { return m_data.data(); }
 		const T * data() const { return m_data.data(); }
 
@@ -141,7 +167,7 @@ namespace cgra {
 		void wrap(basic_vec<GLenum, 2> w) { m_wrap = w; }
 
 
-		// returns a vector with RGBA values from the given cell
+		// retrieves the texture pixel given the coordinates and wrapping mode
 		vector_t & texel(float x, float y) { return reinterpret_cast<vector_t &>(m_data[N*(floor(x) + floor(y)*m_size.x)]); }
 		const vector_t & texel(float x, float y) const { return reinterpret_cast<const vector_t &>(m_data[N*(floor(x) + floor(y)*m_size.x)]); }
 
@@ -176,31 +202,46 @@ namespace cgra {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap.x);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap.y);
 			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				format,
-				m_size.x,
-				m_size.y,
-				0,
-				detail::gl_image_format<N>::value,
-				detail::gl_type_format<T>::value,
-				m_data.data()
+				GL_TEXTURE_2D, 0, format, m_size.x, m_size.y, 0,
+				detail::gl_image_format<N>::value, detail::gl_type_format<T>::value, m_data.data()
 			);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			return tex;
 		}
 
 		// outputs the image to the given filepath and appends ".png"
-		// TODO make generic of jpg, hdr etc.
 		void write_png(const std::string &filename) {
 			std::vector<unsigned char> char_data(m_size.x*m_size.y*N, 0);
+			detail::stb_image_type_converter<T> converter;
 			for (size_t i = 0; i < m_size.x*m_size.y*N; i++)
-				char_data[i] = 255 * m_data[i];
+				converter.write(m_data[i], char_data[i]);
 			std::ostringstream ss;
 			ss << filename << ".png";
 			if (stbi_write_png(ss.str().c_str(), m_size.x, m_size.y, N, char_data.data() + (m_size.y-1)*m_size.x*N, -m_size.x * N)) {
 				std::cout << "Wrote image: " << ss.str() << std::endl;
 			} else {
+				std::cerr << "Failed to write image: " << ss.str() << std::endl;
+			}
+		}
+
+		// outputs the image to the given filepath and appends ".hdr"
+		void write_hdr(const std::string &filename) {
+			size_t s = m_size.x*m_size.y*N;
+			std::vector<float> float_data(s, 0);
+			detail::stb_image_type_converter<T> converter;
+			for (size_t y = 0; y < m_size.y; y++)
+				for (size_t x = 0; x < m_size.x; x++)
+					for (size_t n = 0; n < N; n++)
+						converter.write(
+							m_data[n + N * (x + m_size.x * (y))],
+							float_data[n + N * (x + m_size.x * (m_size.y - y - 1))]
+						);
+			std::ostringstream ss;
+			ss << filename << ".hdr";
+			if (stbi_write_hdr(ss.str().c_str(), m_size.x, m_size.y, N, float_data.data())) {
+				std::cout << "Wrote image: " << ss.str() << std::endl;
+			}
+			else {
 				std::cerr << "Failed to write image: " << ss.str() << std::endl;
 			}
 		}
@@ -213,7 +254,7 @@ namespace cgra {
 			glfwGetFramebufferSize(glfwGetCurrentContext(), &w, &h);
 
 			image img(w, h);
-			glReadPixels(0, 0, w, h, detail::gl_image_format<N>::value, GL_FLOAT, img.data());
+			glReadPixels(0, 0, w, h, detail::gl_image_format<N>::value, detail::gl_type_format<T>::value, img.data());
 
 			if (write) {
 				ostringstream filename_ss;

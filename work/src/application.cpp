@@ -163,7 +163,7 @@ Teapot::Teapot() {
 	m_texture = img.upload_texture();
 
 	// load mesh
-	mesh_builder md = cgra::load_wavefront_mesh_data("work/res/assets/teapot.obj");
+	mesh_builder md = cgra::load_wavefront_data("work/res/assets/teapot.obj");
 	m_mesh = md.build(m_mesh);
 
 	// compute min/max
