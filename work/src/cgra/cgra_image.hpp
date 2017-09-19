@@ -43,13 +43,13 @@ namespace cgra {
 			inline T read(float f) const { return T(f); }
 			inline T read(unsigned char c) const { return T(c); }
 
-			inline void write(T t, unsigned char &out) const { out = unsigned char(t); }
+			inline void write(T t, unsigned char &out) const { out = (unsigned char)(t); }
 			inline void write(T t, float &out) const { out = float(t); }
 		};
 
 		template <>
 		struct stb_image_type_converter<unsigned char> {
-			inline unsigned char read(float f) const { return unsigned char(f * 255); }
+			inline unsigned char read(float f) const { return (unsigned char)(f * 255); }
 			inline unsigned char read(unsigned char c) const { return c; }
 
 			inline void write(unsigned char t, unsigned char &out) const { out = t; }
@@ -61,7 +61,7 @@ namespace cgra {
 			inline float read(float f) const { return f; }
 			inline float read(unsigned char c) const { return c / 255.f; }
 
-			inline void write(float t, unsigned char &out) const { out = unsigned char(clamp(t, 0.f, 1.f) * 255.f); }
+			inline void write(float t, unsigned char &out) const { out = (unsigned char)(clamp(t, 0.f, 1.f) * 255.f); }
 			inline void write(float t, float &out) const { out = t; }
 		};
 
@@ -70,7 +70,7 @@ namespace cgra {
 			inline double read(float f) const { return f; }
 			inline double read(unsigned char c) const { return c / 255.0; }
 
-			inline void write(double t, unsigned char &out) const { out = unsigned char(clamp(t, 0.0, 1.0) * 255.0); }
+			inline void write(double t, unsigned char &out) const { out = (unsigned char)(clamp(t, 0.0, 1.0) * 255.0); }
 			inline void write(double t, float &out) const { out = float(t); }
 		};
 	}

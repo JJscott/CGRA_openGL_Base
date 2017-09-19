@@ -66,7 +66,7 @@ void Application::scrollCallback(double xoffset, double yoffset) {
 
 
 void Application::keyCallback(int key, int scancode, int action, int mods) {
-	(void) key, scancode, action, mods; // currently un-used
+	(void) key, (void) scancode, (void) action, (void) mods; // currently un-used
 }
 
 
