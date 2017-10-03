@@ -15,13 +15,15 @@ using namespace std;
 using namespace cgra;
 
 
-Application::Application() {
+Application::Application(GLFWwindow *window) : m_window(window) {
 	// compile axis shader
-	shader_builder prog;
-	prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/axis.glsl");
-	prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/axis.glsl");
-	prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/axis.glsl");
-	m_axis_shader = prog.build();
+	{
+		shader_builder prog;
+		prog.set_shader(GL_VERTEX_SHADER, "work/res/shaders/axis.glsl");
+		prog.set_shader(GL_GEOMETRY_SHADER, "work/res/shaders/axis.glsl");
+		prog.set_shader(GL_FRAGMENT_SHADER, "work/res/shaders/axis.glsl");
+		m_axis_shader = prog.build();
+	}
 }
 
 
@@ -75,11 +77,15 @@ void Application::charCallback(unsigned int c) {
 }
 
 
-void Application::render(int width, int height) {
+void Application::render() {
+	// retrieve the window hieght
+	int width, height;
+	glfwGetFramebufferSize(m_window, &width, &height);
+
 	// update window size
 	m_windowsize = vec2(width, height);
 	
-	// ensure we draw to the entire 
+	// set the viewport to draw to the entire window
 	glViewport(0, 0, width, height);
 
 	// clear the back-buffer to a solid grey/blueish background
@@ -96,7 +102,7 @@ void Application::render(int width, int height) {
 
 	// draw axis
 	if (m_show_axis) {
-		// load shader and variables
+		// load shader and variables (no model matrix needed)
 		glUseProgram(m_axis_shader);
 		glUniformMatrix4fv(glGetUniformLocation(m_axis_shader, "uProjectionMatrix"), 1, false, proj.data());
 		glUniformMatrix4fv(glGetUniformLocation(m_axis_shader, "uModelViewMatrix"), 1, false, view.data());

@@ -29,7 +29,7 @@ namespace {
 }
 
 
-// Main program
+// main program
 // 
 int main() {
 
@@ -75,12 +75,12 @@ int main() {
 		abort(); // unrecoverable error
 	}
 
-	// print out our OpenGL verisions
+	// print out our OpenGL versions
 	cout << "Using OpenGL " << glGetString(GL_VERSION) << endl;
 	cout << "Using GLEW " << glewGetString(GLEW_VERSION) << endl;
 	cout << "Using GLFW " << glfwMajor << "." << glfwMinor << "." << glfwRevision << endl;
 
-	// enable GL_ARB_debug_output if available. Not necessary, just helpful
+	// enable GL_ARB_debug_output if available (not necessary, just helpful)
 	if (glfwExtensionSupported("GL_ARB_debug_output")) {
 		// this allows the error location to be determined from a stacktrace
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
@@ -108,18 +108,14 @@ int main() {
 
 	
 	// create the application object (and a global pointer to it)
-	Application application;
+	Application application(window);
 	application_ptr = &application;
 
 	// loop until the user closes the window
 	while (!glfwWindowShouldClose(window)) {
 
-		// make sure we draw to the WHOLE window
-		int width, height;
-		glfwGetFramebufferSize(window, &width, &height);
-
 		// main Render
-		application.render(width, height);
+		application.render();
 
 		// GUI Render on top
 		cgra::gui::newFrame();
@@ -142,10 +138,9 @@ int main() {
 namespace {
 
 	void cursorPosCallback(GLFWwindow *, double xpos, double ypos) {
+		// if not captured then foward to application
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureMouse) return;
-
-		// if not captured then foward to application
 		application_ptr->cursorPosCallback(xpos, ypos);
 	}
 
@@ -153,10 +148,10 @@ namespace {
 	void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 		// forward callback to ImGui
 		cgra::gui::mouseButtonCallback(win, button, action, mods);
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.WantCaptureMouse) return;
 
 		// if not captured then foward to application
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantCaptureMouse) return;
 		application_ptr->mouseButtonCallback(button, action, mods);
 	}
 
@@ -164,10 +159,10 @@ namespace {
 	void scrollCallback(GLFWwindow *win, double xoffset, double yoffset) {
 		// forward callback to ImGui
 		cgra::gui::scrollCallback(win, xoffset, yoffset);
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.WantCaptureMouse) return;
 
 		// if not captured then foward to application
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantCaptureMouse) return;
 		application_ptr->scrollCallback(xoffset, yoffset);
 	}
 
@@ -175,10 +170,10 @@ namespace {
 	void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
 		// forward callback to ImGui
 		cgra::gui::keyCallback(win, key, scancode, action, mods);
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.WantCaptureKeyboard) return;
 
 		// if not captured then foward to application
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantCaptureKeyboard) return;
 		application_ptr->keyCallback(key, scancode, action, mods);
 	}
 
@@ -186,10 +181,10 @@ namespace {
 	void charCallback(GLFWwindow *win, unsigned int c) {
 		// forward callback to ImGui
 		cgra::gui::charCallback(win, c);
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.WantTextInput) return;
 
 		// if not captured then foward to application
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantTextInput) return;
 		application_ptr->charCallback(c);
 	}
 

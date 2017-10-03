@@ -38,6 +38,7 @@ class Application {
 private:
 	// window
 	cgra::vec2 m_windowsize;
+	GLFWwindow *m_window;
 
 	// oribital camera
 	float m_pitch = 0;
@@ -57,7 +58,7 @@ private:
 
 public:
 	// setup
-	Application();
+	Application(GLFWwindow *);
 
 	// disable copy constructors (for safety)
 	Application(const Application&) = delete;
@@ -71,6 +72,6 @@ public:
 	void charCallback(unsigned int c);
 
 	// rendering callbacks (every frame)
-	void render(int width, int height);
+	void render();
 	void renderGUI();
 };

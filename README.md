@@ -20,6 +20,20 @@ if (ImGui::Begin("Window Title")) {
 ImGui::End();
 ```
 
+#### What are CGRA Meta-Tags?
+
+The CGRA meta-tags are text file tags that you can insert into any file. The tags let you specify sections of code to manipulate, allowing you to, for instance, write a completed version of an project/assignment and run a parser (such as `cgra_parse.py`) on the project to get the "base code". Unless otherwise specified, the lines that the tags are on are also removed. The following are the currently implemented tags and are typically inserted as comments in the source files :
+
+ - `CGRA_DELETE_FILE` Flags the entire file for deletion.
+ - `CGRA_REMOVE` Removes only this line.
+ - `CGRA_BEGIN_REMOVE` Removes all lines (including this line) until `CGRA_END_REMOVE` is reached.
+ - `CGRA_END_REMOVE` Specifies the end of removal for `CGRA_BEGIN_REMOVE`.
+ - `CGRA_BEGIN_COMMENT` Uncomments all lines until `CGRA_END_COMMENT` is reached. Only supports single line comments in C++.
+ - `CGRA_END_COMMENT` Specifies the end of uncommenting for `CGRA_BEGIN_COMMENT`.
+ - `CGRA_BEGIN_UNCOMMENT` Uncomments all lines until `CGRA_END_UNCOMMENT` is reached. Only supports single line comments in C++.
+ - `CGRA_END_UNCOMMENT` Specifies the end of uncommenting for `CGRA_BEGIN_UNCOMMENT`.
+
+
 
 # Requirements
 
@@ -72,7 +86,7 @@ If  you  need  to  run  with  arguments  (and  you  will  with  some  projects) 
 
 #### Visual Studio
 
-This project requires at least Visual Studio 2015. You can get [Visual Studio Community 2017](https://www.visualstudio.com/downloads/) for free from Microsoft.
+This project requires at least Visual Studio 2015. You can get the latest, [Visual Studio Community 2017](https://www.visualstudio.com/downloads/), for free from Microsoft.
 
 | Product |  XX  |
 |:-------:|:----:|
@@ -115,16 +129,20 @@ $ ./build/bin/base [args..]
 ```
 
 
-# Simple Library
 
-In addition to the math library and other external libraries, this project provides some simple classes and functions to get started with a graphics application. Further description and documentation can be found in the respective headers.
+# CGRA Library
+
+In addition to the math library and other external libraries, this project provides some simple classes and functions (in the `cgra` namespace) to get started with a graphics application. Further description and documentation can be found in the respective headers.
 
 | File | Description |
 |:----:|:------------|
-| `simple_gui.hpp` | Provides methods for setting up and rendering ImGui  |
-| `simple_image.hpp` | An image class that can loaded from and saved to a file |
-| `simple_shader.hpp` | Functions for compiling shaders from files or strings |
-| `simple_vao.hpp` | A class that helps construct basic models using a VAO  |
+| `cgra_gui.hpp` | Provides methods for setting up and rendering ImGui  |
+| `cgra_image.hpp` | An image class that can loaded from and saved to a file |
+| `cgra_math.hpp` | Linear algebra math library which closely resembles GLSL |
+| `cgra_mesh.hpp` | Mesh builder class for simple position/normal/uvs meshes |
+| `cgra_shader.hpp` | Shader builder class for compiling shaders from files or strings |
+| `cgra_util.hpp` | Utility functions, such as one-line string building |
+| `cgra_wavefront.hpp` | Minimum viable wavefront asset loader function that returns a `mesh_builder` |
 
-
+In particular, the `image<T, N>`, `shader_builder`, and `mesh_builder` classes are designed to hold data on the CPU and provide a way to upload this data to OpenGL. They are not responsible for deallocating these objects, although they can re-use them (when you provide them as arguments while generating).
 
