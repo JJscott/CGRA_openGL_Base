@@ -20,6 +20,7 @@ project("CGRA_PROJECT_${CGRA_PROJECT}" CXX C)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
+
 #########################################################
 # Force Output Directories
 # In general, this isn't a very friendly thing to do, but
@@ -32,13 +33,24 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 
 
-
 #########################################################
 # Find OpenGL
 #########################################################
 
 find_package(OpenGL REQUIRED)
 
+
+
+#########################################################
+# Find OpenMP
+#########################################################
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	add_definitions(-DCGRA_HAVE_OPENMP)
+endif()
 
 
 
@@ -55,7 +67,6 @@ include_directories("${PROJECT_SOURCE_DIR}/src") # Add source to include directo
 
 
 
-
 #########################################################
 # Set Compiler Flags
 #########################################################
@@ -69,17 +80,16 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	add_compile_options(/W4 /MP)
 	# Disable C4800: forcing X to bool (performance warning)
 	add_compile_options(/wd4800)
-	# OpenMP
-	add_compile_options(/openmp)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	add_compile_options("$<$<NOT:$<CONFIG:Debug>>:-O2>")
 	# # C++17, full normal warnings
 	add_compile_options(-std=c++1z -Wall -Wextra -pedantic)
 	# C++14, full normal warnings
 	# add_compile_options(-std=c++1y -Wall -Wextra -pedantic)
 	# don't export by default
 	add_compile_options(-fvisibility=hidden)
-	# Threading support, OpenMP, enable SSE2
-	add_compile_options(-pthread -fopenmp -msse2)
+	# Threading support, enable SSE2
+	add_compile_options(-pthread -msse2)
 	# Promote missing return to error
 	add_compile_options(-Werror=return-type)
 	# enable coloured output if gcc >= 4.9
@@ -88,14 +98,15 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		add_compile_options(-fdiagnostics-color)
 	endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+	add_compile_options("$<$<NOT:$<CONFIG:Debug>>:-O2>")
 	# # C++17, full normal warnings
 	add_compile_options(-std=c++1z -Wall -Wextra -pedantic)
 	# C++14, full normal warnings
 	# add_compile_options(-std=c++1y -Wall -Wextra -pedantic)
 	# don't export by default
 	add_compile_options(-fvisibility=hidden)
-	# Threading support, OpenMP, enable SSE2
-	add_compile_options(-pthread -fopenmp -msse2)
+	# Threading support, enable SSE2
+	add_compile_options(-pthread -msse2)
 	# Promote missing return to error
 	add_compile_options(-Werror=return-type)
 endif()
