@@ -5,6 +5,7 @@
 
 // project
 #include "application.hpp"
+#include "opengl.hpp"
 #include "cgra/cgra_gui.hpp"
 #include "cgra/cgra_image.hpp"
 #include "cgra/cgra_shader.hpp"
@@ -119,8 +120,8 @@ void Application::render() {
 void Application::renderGUI() {
 
 	// setup window
-	ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiSetCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_Once);
 	ImGui::Begin("Camera", 0);
 
 	// display current camera parameters

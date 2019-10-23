@@ -40,6 +40,7 @@ int main() {
 	}
 
 	// force OpenGL to create a 3.3 core context
+	const char* glsl_version = "#version 330 core";
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -94,7 +95,18 @@ int main() {
 	}
 
 	// initialize ImGui
-	if (!cgra::gui::init(window)) {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+
+	// Setup Platform/Renderer bindings
+	if (!ImGui_ImplGlfw_InitForOpenGL(window, true) || !ImGui_ImplOpenGL3_Init(glsl_version)) {
 		cerr << "Error: Could not initialize ImGui" << endl;
 		abort(); // unrecoverable error
 	}
@@ -118,9 +130,12 @@ int main() {
 		application.render();
 
 		// GUI Render on top
-		cgra::gui::newFrame();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 		application.renderGUI();
-		cgra::gui::render();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// swap front and back buffers
 		glfwSwapBuffers(window);
@@ -130,7 +145,12 @@ int main() {
 	}
 
 	// clean up ImGui
-	cgra::gui::shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	// clean up glfw
+	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 
@@ -147,7 +167,7 @@ namespace {
 
 	void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 		// forward callback to ImGui
-		cgra::gui::mouseButtonCallback(win, button, action, mods);
+		ImGui_ImplGlfw_MouseButtonCallback(win, button, action, mods);
 
 		// if not captured then foward to application
 		ImGuiIO& io = ImGui::GetIO();
@@ -158,7 +178,7 @@ namespace {
 
 	void scrollCallback(GLFWwindow *win, double xoffset, double yoffset) {
 		// forward callback to ImGui
-		cgra::gui::scrollCallback(win, xoffset, yoffset);
+		ImGui_ImplGlfw_ScrollCallback(win, xoffset, yoffset);
 
 		// if not captured then foward to application
 		ImGuiIO& io = ImGui::GetIO();
@@ -169,7 +189,7 @@ namespace {
 
 	void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
 		// forward callback to ImGui
-		cgra::gui::keyCallback(win, key, scancode, action, mods);
+		ImGui_ImplGlfw_KeyCallback(win, key, scancode, action, mods);
 
 		// if not captured then foward to application
 		ImGuiIO& io = ImGui::GetIO();
@@ -180,7 +200,7 @@ namespace {
 
 	void charCallback(GLFWwindow *win, unsigned int c) {
 		// forward callback to ImGui
-		cgra::gui::charCallback(win, c);
+		ImGui_ImplGlfw_CharCallback(win, c);
 
 		// if not captured then foward to application
 		ImGuiIO& io = ImGui::GetIO();
